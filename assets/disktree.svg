@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  disktree's icon: a treemap, with the band a directory keeps for its name.
+
+  Sized for macOS: a 1024 canvas with the rounded rectangle inset 100 px on
+  each side, the shape Apple's icons share, so macOS 26 draws it as-is instead
+  of clipping it into a squircle. The tiles are the muted "kind" colours from
+  the app, and the one amber tile is the colour kept apart for what matters.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#232635"/>
+      <stop offset="1" stop-color="#161822"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Plate: the rounded rectangle every macOS icon sits in. -->
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#bg)"/>
+
+  <!-- The mosaic, inset like the treemap sits inside its window: code (blue),
+       toolchains (green), media (purple), documents (grey), git (red), and
+       the selection in amber. -->
+  <g>
+    <rect x="196" y="196" width="376" height="392" rx="10" fill="#7aa2f7"/>
+    <rect x="196" y="248" width="376" height="340" rx="10" fill="#2e3b57"/>
+    <rect x="196" y="248" width="376" height="10" fill="#2e3b57"/>
+    <rect x="216" y="270" width="160" height="296" rx="8" fill="#3d4d6d"/>
+    <rect x="396" y="270" width="156" height="144" rx="8" fill="#3d4d6d"/>
+    <rect x="396" y="434" width="156" height="132" rx="8" fill="#3d4d6d"/>
+    <rect x="596" y="196" width="232" height="256" rx="10" fill="#9ece6a"/>
+    <rect x="596" y="248" width="232" height="204" rx="10" fill="#2b4b3a"/>
+    <rect x="596" y="248" width="232" height="10" fill="#2b4b3a"/>
+    <rect x="616" y="270" width="96" height="160" rx="8" fill="#376250"/>
+    <rect x="732" y="270" width="76" height="160" rx="8" fill="#376250"/>
+    <rect x="596" y="476" width="232" height="112" rx="10" fill="#bb9af7"/>
+    <rect x="596" y="520" width="232" height="68" rx="10" fill="#3f3560"/>
+    <rect x="596" y="520" width="232" height="10" fill="#3f3560"/>
+    <rect x="196" y="612" width="196" height="216" rx="10" fill="#9aa5b1"/>
+    <rect x="196" y="660" width="196" height="168" rx="10" fill="#3a3f4b"/>
+    <rect x="196" y="660" width="196" height="10" fill="#3a3f4b"/>
+    <rect x="416" y="612" width="156" height="216" rx="10" fill="#f7768e"/>
+    <rect x="416" y="660" width="156" height="168" rx="10" fill="#5c3140"/>
+    <rect x="416" y="660" width="156" height="10" fill="#5c3140"/>
+    <rect x="596" y="612" width="232" height="216" rx="10" fill="#f2c987"/>
+    <rect x="596" y="660" width="232" height="168" rx="10" fill="#e0af68"/>
+    <rect x="596" y="660" width="232" height="10" fill="#e0af68"/>
+  </g>
+
+  <!-- A faint top-light so the plate reads as a surface, not a flat cutout. -->
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#sheen)"/>
+  <rect x="101" y="101" width="822" height="822" rx="183" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
+</svg>

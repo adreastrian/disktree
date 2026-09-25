@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Rendered by packaging/bundle.sh: @VERSION@ is the workspace version from
+  Cargo.toml. GPUI shows a Dock icon and a menu bar from a bare binary, but
+  only a bundle gives the app its real name and icon, a stable identity for
+  the privacy (TCC) prompts, and a place in Finder's "Open With" for folders.
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>dev.disktree.Disktree</string>
+	<key>CFBundleName</key>
+	<string>Disktree</string>
+	<key>CFBundleDisplayName</key>
+	<string>Disktree</string>
+	<key>CFBundleExecutable</key>
+	<string>disktree</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleIconFile</key>
+	<string>disktree</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>MIT License</string>
+
+	<!-- macOS asks before an app reads these; the answer is the app's whole
+	     purpose, so each string says just that. -->
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Disktree measures what is on the disk, including the Desktop folder.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Disktree measures what is on the disk, including the Documents folder.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Disktree measures what is on the disk, including the Downloads folder.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Disktree measures what is on a removable volume when asked to scan it.</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string>Disktree measures what is on a network volume when asked to scan it.</string>
+
+	<!-- Folders, so Finder offers "Open With Disktree". Alternate rank adds a
+	     handler without ever making Disktree the default for folders. -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Folder</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.folder</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
