@@ -115,6 +115,16 @@ pub mod size {
     pub const HELP: Rems = Rems(32.5);
     /// The key column of the keyboard overlay.
     pub const KEY_LANE: Rems = Rems(7.0);
+    /// The Settings window: wide enough for three theme cards in a row
+    /// beside the label column, and no taller than its three rows.
+    pub const SETTINGS_WINDOW: Rems = Rems(38.0);
+    pub const SETTINGS_WINDOW_HEIGHT: Rems = Rems(25.0);
+    /// The label column of the Settings window, right-aligned as System
+    /// Settings aligns its own.
+    pub const SETTINGS_LABEL: Rems = Rems(7.0);
+    /// A theme card, and the mini treemap drawn on it.
+    pub const THEME_CARD: Rems = Rems(8.5);
+    pub const THEME_THUMB: Rems = Rems(7.0);
 }
 
 /// What macOS draws over the title bar. In pixels, since the traffic

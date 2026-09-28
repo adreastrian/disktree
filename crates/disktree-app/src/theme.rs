@@ -39,7 +39,6 @@ pub const OPTION_GROUP_CONTEXT: &str = "DisktreeOptionGroup";
 /// A theme the person picks in Settings: one style, drawn as a light and a
 /// dark palette. Which of the two is on screen is [`AppearanceChoice`]'s
 /// call, not the theme's.
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum ThemeId {
     #[default]
@@ -51,7 +50,6 @@ pub enum ThemeId {
     RosePine,
 }
 
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 impl ThemeId {
     /// Every shipped theme, in the order Settings and the menu list them.
     pub const ALL: [Self; 6] = [
@@ -105,7 +103,6 @@ impl ThemeId {
 
 /// Which Catppuccin flavour a Catppuccin theme is dark in. Ignored by the
 /// themes without flavours.
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum Flavour {
     #[default]
@@ -114,7 +111,6 @@ pub enum Flavour {
     Mocha,
 }
 
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 impl Flavour {
     pub const ALL: [Self; 3] = [Self::Frappe, Self::Macchiato, Self::Mocha];
 
@@ -140,7 +136,6 @@ impl Flavour {
 }
 
 /// Light, dark, or whatever System Settings says.
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum AppearanceChoice {
     #[default]
@@ -149,7 +144,6 @@ pub enum AppearanceChoice {
     Dark,
 }
 
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 impl AppearanceChoice {
     pub const ALL: [Self; 3] = [Self::System, Self::Light, Self::Dark];
 
@@ -208,7 +202,6 @@ pub fn choice(cx: &App) -> ThemeChoice {
 }
 
 /// Make `choice` the current one and redraw every window in it.
-#[expect(dead_code, reason = "Settings and the View menu use it next")]
 pub fn select(choice: ThemeChoice, cx: &mut App) {
     cx.set_global(choice);
     refresh(cx.window_appearance(), cx);

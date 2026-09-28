@@ -183,6 +183,23 @@ there, then choose:
 When it finishes, disktree scans again so the numbers on screen match the disk,
 and shows how much free space was actually gained.
 
+### Themes
+
+Disktree ships six themes: **Catppuccin**, **Catppuccin Pastel**,
+**Catppuccin Quiet**, **Aqua**, **Graphite** and **Rosé Pine**. Each has a
+light and a dark palette; the three Catppuccin themes also let you pick the
+dark flavour, **Frappé**, **Macchiato** or **Mocha** (light is always
+Latte). The appearance follows the system by default, or can be held at
+Light or Dark.
+
+**Disktree ▸ Settings…** (`⌘ ,`) opens a small window with the appearance,
+a card for every theme drawn in its own colours, and the flavour row when
+the theme has one; a click applies at once, and Escape or `⌘ W` closes it.
+The same choices are in **View ▸ Theme**, with the current one checked.
+The choice is saved to
+`~/Library/Application Support/Disktree/settings`, a plain
+`key = value` file, and read again at launch.
+
 ## Keys
 
 Disktree has a normal macOS menu bar, so every `⌘` shortcut below is also a
@@ -196,6 +213,7 @@ menu item.
 | `⌘ =` `⌘ -` `⌘ 0` | interface zoom |
 | `⌘ ⇧ D` | the whole disk (same as `g`) |
 | `⌘ /` | every key (same as `?`) |
+| `⌘ ,` | Settings: appearance, theme and flavour |
 | `⌘ W` | close the window |
 | `⌘ Q` | quit |
 | `space` / `x` | mark or unmark the tile you point at |
@@ -351,7 +369,10 @@ that and refuses first unless the tag exists and points at `HEAD`.
 | `crates/disktree-app/src/state.rs` | every action the interface can take, and the key map |
 | `crates/disktree-app/src/views.rs` | the screens |
 | `crates/disktree-app/src/treemap_view.rs` | painting the mosaic and its labels |
-| `crates/disktree-app/src/theme.rs` | the light and dark palettes, and following the system appearance |
+| `crates/disktree-app/src/theme.rs` | the theme choice, and following the system appearance |
+| `crates/disktree-app/src/themes.rs` | the palettes of every theme; generated from `design/palettes/`, not edited |
+| `crates/disktree-app/src/settings.rs` | the saved choice in `~/Library/Application Support/Disktree/settings` |
+| `crates/disktree-app/src/settings_view.rs` | the Settings window |
 | `crates/disktree-app/src/controls.rs` | buttons, dialogs, tooltips and key caps |
 | `crates/disktree-app/src/ui.rs` | the spacing, type and size scale, in `rem` |
 | `crates/disktree-app/src/tests.rs` | end-to-end tests through a real window |

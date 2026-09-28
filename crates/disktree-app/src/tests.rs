@@ -1610,3 +1610,284 @@ fn marking_a_directory_marks_everything_inside_it(cx: &mut TestAppContext) {
     update(&view, cx, |app, cx| app.toggle_mark(&junk, cx));
     assert!(read(&view, cx, |app| app.marks.is_empty()));
 }
+
+// ---------------------------------------------------------------------------
+// Settings: the window, the theme choice, and the View ▸ Theme menu.
+
+/// What `main` sets up for Settings on top of [`init`]: the app-level
+/// handlers the theme actions land in, and the menu bar. No settings file
+/// is installed, so nothing is saved and the tests never touch the
+/// person's own.
+fn init_settings(cx: &mut App) {
+    init(cx);
+    crate::menu::init(cx);
+}
+
+/// Open the Settings window the way `⌘ ,` does, and drive it.
+fn settings_window(
+    cx: &mut TestAppContext,
+) -> (Entity<crate::settings_view::SettingsWindow>, &mut Window) {
+    let handle = cx.update(crate::settings_view::open);
+    let view = handle.root(cx).expect("the settings view");
+    let cx = VisualTestContext::from_window(*handle, cx).into_mut();
+    cx.run_until_parked();
+    (view, cx)
+}
+
+/// The debug selector of a theme card.
+fn card_selector(id: crate::theme::ThemeId) -> &'static str {
+    // `debug_bounds` wants a static name; a test leaks a few bytes.
+    Box::leak(format!("settings-theme-{}", id.key()).into_boxed_str())
+}
+
+/// Every theme draws in every appearance, with every card on screen, and
+/// the flavour row is there only for a Catppuccin style.
+#[gpui_kit::test]
+fn the_settings_window_draws_every_theme_and_appearance(
+    cx: &mut TestAppContext,
+) {
+    use crate::theme::{AppearanceChoice, ThemeChoice, ThemeId};
+
+    cx.update(init_settings);
+    let (_, cx) = settings_window(cx);
+    for theme in ThemeId::ALL {
+        for appearance in AppearanceChoice::ALL {
+            let choice = ThemeChoice {
+                theme,
+                appearance,
+                ..ThemeChoice::default()
+            };
+            cx.update(|_, cx| crate::settings::choose(choice, cx));
+            draw(cx);
+            assert!(
+                cx.debug_bounds("disktree-settings").is_some(),
+                "{theme:?} in {appearance:?}"
+            );
+            assert_eq!(
+                cx.debug_bounds("settings-flavour-mocha").is_some(),
+                theme.has_flavours(),
+                "{theme:?} shows the flavour row only if it has flavours"
+            );
+            for id in ThemeId::ALL {
+                assert!(
+                    cx.debug_bounds(card_selector(id)).is_some(),
+                    "{theme:?} in {appearance:?} draws the {id:?} card"
+                );
+            }
+        }
+    }
+}
+
+/// Clicking a theme card changes the choice and installs its palette,
+/// live; the keyboard reaches the cards too; and the flavour row comes
+/// and goes with the theme.
+#[gpui_kit::test]
+fn choosing_a_theme_card_applies_it(cx: &mut TestAppContext) {
+    use crate::theme::{AppearanceChoice, Flavour, ThemeChoice, ThemeId};
+    use gpui_kit::WindowAppearance;
+    use gpui_kit::base::ThemeAppearance;
+
+    cx.update(init_settings);
+    let (view, cx) = settings_window(cx);
+    draw(cx);
+    assert_eq!(
+        cx.update(|_, cx| crate::theme::choice(cx).theme),
+        ThemeId::Catppuccin
+    );
+    assert!(cx.debug_bounds("settings-flavour-mocha").is_some());
+
+    let card = cx
+        .debug_bounds(card_selector(ThemeId::Aqua))
+        .expect("the Aqua card");
+    cx.simulate_click(card.center(), Modifiers::default());
+    draw(cx);
+
+    let choice = cx.update(|_, cx| crate::theme::choice(cx));
+    assert_eq!(choice.theme, ThemeId::Aqua);
+    assert!(
+        cx.debug_bounds("settings-flavour-mocha").is_none(),
+        "Aqua has no flavours"
+    );
+    // The installed palette is the one the choice resolves to, in the
+    // appearance the test platform reports. `apply` swaps the mono face
+    // for one the machine has, so the colours are compared, not the font.
+    let shown = AppearanceChoice::System.resolve(WindowAppearance::Light);
+    cx.update(|_, cx| {
+        let installed = cx.global::<Theme>();
+        let resolved = Theme::resolve(choice, shown);
+        assert_eq!(installed.name, resolved.name);
+        assert_eq!(installed.appearance, resolved.appearance);
+        assert_eq!(installed.accent, resolved.accent);
+        assert_eq!(installed.background, resolved.background);
+    });
+
+    // The keyboard reaches the same choice: from the window's own focus,
+    // Tab lands on the appearance group, Tab again on the cards, Left
+    // moves from Aqua to Catppuccin Quiet, and Return commits.
+    let focus = view.read_with(cx, |this, _| this.focus.clone());
+    cx.update(|window, cx| window.focus(&focus, cx));
+    draw(cx);
+    press(cx, "tab tab left enter");
+    let choice = cx.update(|_, cx| crate::theme::choice(cx));
+    assert_eq!(choice.theme, ThemeId::CatppuccinQuiet);
+    assert!(cx.debug_bounds("settings-flavour-mocha").is_some());
+
+    // Appearance and flavour go the same way, through their actions.
+    cx.dispatch_action(crate::menu::SelectAppearance(AppearanceChoice::Dark));
+    cx.dispatch_action(crate::menu::SelectFlavour(Flavour::Mocha));
+    let choice = cx.update(|_, cx| crate::theme::choice(cx));
+    assert_eq!(
+        choice,
+        ThemeChoice {
+            theme: ThemeId::CatppuccinQuiet,
+            flavour: Flavour::Mocha,
+            appearance: AppearanceChoice::Dark,
+        }
+    );
+    cx.update(|_, cx| {
+        assert_eq!(cx.global::<Theme>().appearance, ThemeAppearance::Dark);
+    });
+}
+
+/// `⌘ ,` opens one Settings window and a second `⌘ ,` brings that one
+/// forward; Escape and `⌘ W` close it and the treemap window stays.
+#[gpui_kit::test]
+fn settings_opens_once_and_escape_closes_it(cx: &mut TestAppContext) {
+    cx.update(init_settings);
+    let temp = fixture();
+    let (_, main) = view_over(temp.path(), cx);
+    draw(main);
+    assert_eq!(main.windows().len(), 1);
+
+    main.dispatch_action(crate::menu::OpenSettings);
+    assert_eq!(main.windows().len(), 2, "Settings opened");
+    let settings = main.update(|_, cx| crate::settings_view::open(cx));
+    assert_eq!(main.windows().len(), 2, "the open one is reused");
+
+    let in_settings =
+        VisualTestContext::from_window(*settings, main).into_mut();
+    in_settings.simulate_keystrokes("escape");
+    in_settings.run_until_parked();
+    let left = main.windows();
+    assert_eq!(left.len(), 1, "Escape closed Settings");
+    assert_ne!(left[0], *settings, "the treemap window is the one left");
+
+    // Closed and reopened: a new window, not the stale handle.
+    let again = main.update(|_, cx| crate::settings_view::open(cx));
+    assert_ne!(*again, *settings);
+    assert_eq!(main.windows().len(), 2);
+    let in_settings = VisualTestContext::from_window(*again, main).into_mut();
+    in_settings.simulate_keystrokes("cmd-w");
+    in_settings.run_until_parked();
+    assert_eq!(main.windows().len(), 1, "⌘ W closed Settings");
+}
+
+/// The names of a menu's action items, or only the checked ones.
+fn menu_names(menu: &gpui_kit::OwnedMenu, only_checked: bool) -> Vec<String> {
+    menu.items
+        .iter()
+        .filter_map(|item| match item {
+            gpui_kit::OwnedMenuItem::Action { name, checked, .. }
+                if *checked || !only_checked =>
+            {
+                Some(name.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The menu bar the platform was last given.
+fn menu_bar(cx: &mut Window) -> Vec<gpui_kit::OwnedMenu> {
+    cx.update(|_, cx| cx.get_menus().expect("a menu bar"))
+}
+
+/// View ▸ Theme from a menu bar.
+fn theme_menu(menus: Vec<gpui_kit::OwnedMenu>) -> gpui_kit::OwnedMenu {
+    menus
+        .into_iter()
+        .find(|menu| menu.name.as_ref() == "View")
+        .expect("View")
+        .items
+        .into_iter()
+        .find_map(|item| match item {
+            gpui_kit::OwnedMenuItem::Submenu(menu)
+                if menu.name.as_ref() == "Theme" =>
+            {
+                Some(menu)
+            }
+            _ => None,
+        })
+        .expect("View ▸ Theme")
+}
+
+/// The View ▸ Theme menu checks the current theme, appearance and flavour,
+/// drops the flavours for a theme without them, and follows a change;
+/// Settings… is in the application menu.
+#[gpui_kit::test]
+fn the_theme_menu_checks_the_current_choice(cx: &mut TestAppContext) {
+    use crate::theme::{AppearanceChoice, Flavour, ThemeChoice, ThemeId};
+
+    cx.update(init_settings);
+    let temp = fixture();
+    let (_, cx) = view_over(temp.path(), cx);
+
+    let menu = theme_menu(menu_bar(cx));
+    assert_eq!(
+        menu_names(&menu, true),
+        ["Catppuccin", "System", "Frapp\u{e9}"]
+    );
+    let all = menu_names(&menu, false);
+    assert!(
+        ThemeId::ALL
+            .iter()
+            .all(|id| all.contains(&id.name().to_string())),
+        "every theme is listed: {all:?}"
+    );
+    assert!(
+        Flavour::ALL
+            .iter()
+            .all(|flavour| all.contains(&flavour.name().to_string())),
+        "the flavours are listed for Catppuccin: {all:?}"
+    );
+    let app_menu = menu_bar(cx)
+        .into_iter()
+        .next()
+        .expect("the application menu");
+    assert!(
+        menu_names(&app_menu, false).contains(&"Settings\u{2026}".to_string()),
+        "{:?}",
+        menu_names(&app_menu, false)
+    );
+
+    cx.dispatch_action(crate::menu::SelectTheme(ThemeId::Graphite));
+    cx.dispatch_action(crate::menu::SelectAppearance(AppearanceChoice::Light));
+    let menu = theme_menu(menu_bar(cx));
+    assert_eq!(menu_names(&menu, true), ["Graphite", "Light"]);
+    assert!(
+        !menu_names(&menu, false).contains(&"Mocha".to_string()),
+        "no flavours for Graphite: {:?}",
+        menu_names(&menu, false)
+    );
+    assert_eq!(
+        cx.update(|_, cx| crate::theme::choice(cx)),
+        ThemeChoice {
+            theme: ThemeId::Graphite,
+            flavour: Flavour::Frappe,
+            appearance: AppearanceChoice::Light,
+        }
+    );
+
+    // A pure build from a choice, without the platform in between.
+    let menus = crate::menu::menus(ThemeChoice {
+        theme: ThemeId::CatppuccinPastel,
+        flavour: Flavour::Macchiato,
+        appearance: AppearanceChoice::Dark,
+    });
+    let menu =
+        theme_menu(menus.into_iter().map(gpui_kit::Menu::owned).collect());
+    assert_eq!(
+        menu_names(&menu, true),
+        ["Catppuccin Pastel", "Dark", "Macchiato"]
+    );
+}
