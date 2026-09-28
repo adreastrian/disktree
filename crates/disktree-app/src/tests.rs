@@ -576,6 +576,7 @@ fn the_title_bar_clears_the_traffic_lights_at_the_minimum_size(
 /// or not, get the dark one, and both light variants the light one.
 #[test]
 fn the_appearance_picks_the_palette() {
+    use crate::theme::AppearanceChoice;
     use gpui_kit::WindowAppearance;
     use gpui_kit::base::ThemeAppearance;
 
@@ -586,7 +587,7 @@ fn the_appearance_picks_the_palette() {
         (WindowAppearance::VibrantDark, ThemeAppearance::Dark),
     ] {
         assert_eq!(
-            Theme::for_appearance(appearance).appearance,
+            AppearanceChoice::System.resolve(appearance),
             expected,
             "{appearance:?}"
         );

@@ -140,10 +140,10 @@ fn main() -> Result<()> {
             // The palette was chosen from the platform's appearance
             // before the window existed; from here on the window's own
             // reports keep it in step with System Settings.
-            theme::Theme::for_appearance(window.appearance()).apply(cx);
+            theme::refresh(window.appearance(), cx);
             window
                 .observe_window_appearance(|window, cx| {
-                    theme::Theme::for_appearance(window.appearance()).apply(cx);
+                    theme::refresh(window.appearance(), cx);
                 })
                 .detach();
         });

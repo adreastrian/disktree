@@ -36,6 +36,192 @@ const MONO_FALLBACK: &str = "Menlo";
 /// The key context in which a choice group listens for arrow keys.
 pub const OPTION_GROUP_CONTEXT: &str = "DisktreeOptionGroup";
 
+/// A theme the person picks in Settings: one style, drawn as a light and a
+/// dark palette. Which of the two is on screen is [`AppearanceChoice`]'s
+/// call, not the theme's.
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum ThemeId {
+    #[default]
+    Catppuccin,
+    CatppuccinPastel,
+    CatppuccinQuiet,
+    Aqua,
+    Graphite,
+    RosePine,
+}
+
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+impl ThemeId {
+    /// Every shipped theme, in the order Settings and the menu list them.
+    pub const ALL: [Self; 6] = [
+        Self::Catppuccin,
+        Self::CatppuccinPastel,
+        Self::CatppuccinQuiet,
+        Self::Aqua,
+        Self::Graphite,
+        Self::RosePine,
+    ];
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Catppuccin => "Catppuccin",
+            Self::CatppuccinPastel => "Catppuccin Pastel",
+            Self::CatppuccinQuiet => "Catppuccin Quiet",
+            Self::Aqua => "Aqua",
+            Self::Graphite => "Graphite",
+            Self::RosePine => "Ros\u{e9} Pine",
+        }
+    }
+
+    /// The name written to the settings file. Kept apart from [`name`] so
+    /// a display name can change without forgetting what people chose.
+    ///
+    /// [`name`]: Self::name
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Catppuccin => "catppuccin",
+            Self::CatppuccinPastel => "catppuccin-pastel",
+            Self::CatppuccinQuiet => "catppuccin-quiet",
+            Self::Aqua => "aqua",
+            Self::Graphite => "graphite",
+            Self::RosePine => "rose-pine",
+        }
+    }
+
+    pub fn from_key(key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|id| id.key() == key)
+    }
+
+    /// Catppuccin's dark palette comes in three flavours; light is always
+    /// Latte. The other themes have one dark palette.
+    pub const fn has_flavours(self) -> bool {
+        matches!(
+            self,
+            Self::Catppuccin | Self::CatppuccinPastel | Self::CatppuccinQuiet
+        )
+    }
+}
+
+/// Which Catppuccin flavour a Catppuccin theme is dark in. Ignored by the
+/// themes without flavours.
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum Flavour {
+    #[default]
+    Frappe,
+    Macchiato,
+    Mocha,
+}
+
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+impl Flavour {
+    pub const ALL: [Self; 3] = [Self::Frappe, Self::Macchiato, Self::Mocha];
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Frappe => "Frapp\u{e9}",
+            Self::Macchiato => "Macchiato",
+            Self::Mocha => "Mocha",
+        }
+    }
+
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Frappe => "frappe",
+            Self::Macchiato => "macchiato",
+            Self::Mocha => "mocha",
+        }
+    }
+
+    pub fn from_key(key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|flavour| flavour.key() == key)
+    }
+}
+
+/// Light, dark, or whatever System Settings says.
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum AppearanceChoice {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+impl AppearanceChoice {
+    pub const ALL: [Self; 3] = [Self::System, Self::Light, Self::Dark];
+
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::System => "System",
+            Self::Light => "Light",
+            Self::Dark => "Dark",
+        }
+    }
+
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::System => "system",
+            Self::Light => "light",
+            Self::Dark => "dark",
+        }
+    }
+
+    pub fn from_key(key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|choice| choice.key() == key)
+    }
+
+    /// The palette half to draw, given what the window reports. The
+    /// vibrant variants are the same two appearances seen through a
+    /// translucent material.
+    pub const fn resolve(self, window: WindowAppearance) -> ThemeAppearance {
+        match (self, window) {
+            (Self::Light, _)
+            | (
+                Self::System,
+                WindowAppearance::Light | WindowAppearance::VibrantLight,
+            ) => ThemeAppearance::Light,
+            (Self::Dark, _)
+            | (
+                Self::System,
+                WindowAppearance::Dark | WindowAppearance::VibrantDark,
+            ) => ThemeAppearance::Dark,
+        }
+    }
+}
+
+/// What the person chose in Settings. The installed [`Theme`] is derived
+/// from it and the window's appearance, and re-derived when either changes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub struct ThemeChoice {
+    pub theme: ThemeId,
+    pub flavour: Flavour,
+    pub appearance: AppearanceChoice,
+}
+impl Global for ThemeChoice {}
+
+/// The current choice, or the default before one is set.
+pub fn choice(cx: &App) -> ThemeChoice {
+    cx.try_global::<ThemeChoice>().copied().unwrap_or_default()
+}
+
+/// Make `choice` the current one and redraw every window in it.
+#[expect(dead_code, reason = "Settings and the View menu use it next")]
+pub fn select(choice: ThemeChoice, cx: &mut App) {
+    cx.set_global(choice);
+    refresh(cx.window_appearance(), cx);
+}
+
+/// Re-derive the installed palette from the current choice and what the
+/// window reports: called at launch, on a new choice, and whenever the
+/// system appearance changes.
+pub fn refresh(window: WindowAppearance, cx: &mut App) {
+    let choice = choice(cx);
+    Theme::resolve(choice, choice.appearance.resolve(window)).apply(cx);
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
     pub name: SharedString,
@@ -110,16 +296,14 @@ impl Theme {
         }
     }
 
-    /// The palette for a window appearance. The vibrant variants are the
-    /// same two appearances seen through a translucent material.
-    pub fn for_appearance(appearance: WindowAppearance) -> Self {
+    /// The palette `choice` draws in `appearance`.
+    // Placeholder until the theme table lands: every theme is still the
+    // system palette.
+    pub fn resolve(choice: ThemeChoice, appearance: ThemeAppearance) -> Self {
+        let _ = choice;
         match appearance {
-            WindowAppearance::Light | WindowAppearance::VibrantLight => {
-                Self::light()
-            }
-            WindowAppearance::Dark | WindowAppearance::VibrantDark => {
-                Self::dark()
-            }
+            ThemeAppearance::Light => Self::light(),
+            ThemeAppearance::Dark => Self::dark(),
         }
     }
 
@@ -253,5 +437,5 @@ pub fn init(cx: &mut App) {
             Some(OPTION_GROUP_CONTEXT),
         ),
     ]);
-    Theme::for_appearance(cx.window_appearance()).apply(cx);
+    refresh(cx.window_appearance(), cx);
 }
