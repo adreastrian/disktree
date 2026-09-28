@@ -167,6 +167,10 @@ would have been shipped.
 | a key, a menu action, a screen transition, a mark | `crates/disktree-app/src/state.rs` |
 | spacing, type and size | `crates/disktree-app/src/ui.rs` — tokens only, no `px` in layout |
 | the light and dark palettes, appearance, radii, fonts | `crates/disktree-app/src/theme.rs` |
+| a theme's colours | `design/palettes/` — `crates/disktree-app/src/themes.rs` is generated from it, never edited by hand |
+| the saved theme choice, the settings file | `crates/disktree-app/src/settings.rs` |
+| the Settings window, `⌘ ,` | `crates/disktree-app/src/settings_view.rs` |
+| the menu bar, View ▸ Theme, the `⌘` chords | `crates/disktree-app/src/menu.rs` |
 | buttons, choice groups, dialogs, tooltips, keycaps | `crates/disktree-app/src/controls.rs` |
 | the mosaic's painting or labels | `crates/disktree-app/src/treemap_view.rs` |
 | layout of a screen | `crates/disktree-app/src/views.rs` |
@@ -197,6 +201,12 @@ would have been shipped.
   the files are gone while unmarked neighbours are untouched, one that
   draws the window under both palettes, and one that checks every
   `WindowAppearance` (vibrant or not) picks the matching palette.
+* The Settings window is covered the same way: every theme in every
+  appearance draws, a click on a card changes the choice and the installed
+  palette, Tab and the arrows reach the cards, `⌘ ,` opens one window and
+  Escape closes it, and View ▸ Theme checks the current choice. The
+  settings file is tested against a temporary directory; in the harness the
+  path is `None`, so no test touches the real file.
 * Rendering was verified by those tests and by running the app against a real
   home directory in light and dark; it has not been eyeballed at every
   interface zoom.

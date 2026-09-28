@@ -350,6 +350,7 @@ pub fn button_group(
                 .accessibility_label(item.label.clone())
                 .set_position(index + 1, count)
                 .tab_stop(false)
+                .debug_selector(|| format!("{id}-{}", item.value))
                 .flex()
                 .items_center()
                 .flex_1()
@@ -400,6 +401,96 @@ pub fn button_group(
             .rounded(radius::CONTROL)
             .bg(t.selected_fill().opacity(0.5))
             .children(rows),
+        cursor,
+        items,
+        on_change,
+        cx,
+    )
+}
+
+/// A single choice among pictures: one card per item, its picture over its
+/// label, the chosen one ringed in the accent. The keyboard works as it
+/// does in [`button_group`]: one stop for the group, Left/Right to move,
+/// Return/Space to commit. `pictures` pairs with `items` by index.
+pub fn card_group(
+    id: impl Into<ElementId>,
+    items: Vec<ChoiceItem>,
+    pictures: Vec<AnyElement>,
+    selected: Option<usize>,
+    on_change: impl Fn(usize, &mut Window, &mut App) + 'static,
+    window: &mut Window,
+    cx: &mut App,
+) -> RadioGroup {
+    debug_assert_eq!(items.len(), pictures.len());
+    let id = id.into();
+    let cursor = cursor(&id, &items, selected, window, cx);
+    let on_change: Change = Rc::new(move |index, window, cx| {
+        if selected != Some(index) {
+            on_change(index, window, cx);
+        }
+    });
+    let t = cx.theme().clone();
+    let count = items.len();
+    let cards = items
+        .iter()
+        .zip(pictures)
+        .enumerate()
+        .map(|(index, (item, picture))| {
+            let change = on_change.clone();
+            let focus = cursor.read(cx).focus.clone();
+            let chosen = selected == Some(index);
+            let under_cursor = focus.is_focused(window)
+                && cursor.read(cx).index == Some(index);
+            Radio::new(index)
+                .checked(chosen)
+                .disabled(item.disabled)
+                .accessibility_label(item.label.clone())
+                .set_position(index + 1, count)
+                .tab_stop(false)
+                .debug_selector(|| format!("{id}-{}", item.value))
+                .flex()
+                .flex_col()
+                .items_center()
+                .gap(space::XS)
+                .w(size::THEME_CARD)
+                .p(space::SM)
+                // Two hairlines, so the ring reads as a ring and not as a
+                // border that happens to be coloured.
+                .border_2()
+                .rounded(radius::SURFACE)
+                .border_color(if chosen {
+                    t.accent
+                } else if under_cursor {
+                    t.control_border()
+                } else {
+                    t.transparent()
+                })
+                .font_family(t.font.clone())
+                .text_size(text::BODY)
+                .text_color(t.foreground)
+                .when(chosen, |card| card.font_weight(FontWeight::SEMIBOLD))
+                .when(!item.disabled && !chosen, |card| {
+                    card.hover(|card| card.bg(t.hover_fill()))
+                        .active(|card| card.bg(t.pressed_fill()))
+                })
+                .styles(|styles| styles.disabled(|card| card.opacity(0.45)))
+                .child(picture)
+                .child(item.label.clone())
+                .on_change(move |_, _, window, cx| {
+                    focus.focus(window, cx);
+                    change(index, window, cx);
+                })
+                .into_any_element()
+        })
+        .collect::<Vec<_>>();
+    navigate(
+        RadioGroup::new(id)
+            .axis(gpui_kit::Axis::Horizontal)
+            .flex()
+            .flex_wrap()
+            .gap(space::SM)
+            .rounded(radius::SURFACE)
+            .children(cards),
         cursor,
         items,
         on_change,
