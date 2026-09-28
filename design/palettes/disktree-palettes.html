@@ -1,0 +1,2595 @@
+<title>Disktree Palettes</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --bg-elev: #ffffff;
+    --fg: #1d1d1f;
+    --fg-2: #6e6e73;
+    --fg-3: #a1a1a6;
+    --line: rgba(0, 0, 0, .1);
+    --line-strong: rgba(0, 0, 0, .18);
+    --fill: rgba(0, 0, 0, .05);
+    --fill-hover: rgba(0, 0, 0, .08);
+    --accent: #0a60ff;
+    --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 8px 24px rgba(0, 0, 0, .06);
+    --seg-track: rgba(0, 0, 0, .06);
+    --seg-on: #ffffff;
+    --seg-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .06);
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161618;
+      --bg-elev: #1f1f22;
+      --fg: #f5f5f7;
+      --fg-2: #a1a1a6;
+      --fg-3: #6e6e73;
+      --line: rgba(255, 255, 255, .1);
+      --line-strong: rgba(255, 255, 255, .2);
+      --fill: rgba(255, 255, 255, .06);
+      --fill-hover: rgba(255, 255, 255, .1);
+      --accent: #3b8bff;
+      --on-accent: #ffffff;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      --seg-track: rgba(255, 255, 255, .08);
+      --seg-on: #4a4a4f;
+      --seg-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161618;
+    --bg-elev: #1f1f22;
+    --fg: #f5f5f7;
+    --fg-2: #a1a1a6;
+    --fg-3: #6e6e73;
+    --line: rgba(255, 255, 255, .1);
+    --line-strong: rgba(255, 255, 255, .2);
+    --fill: rgba(255, 255, 255, .06);
+    --fill-hover: rgba(255, 255, 255, .1);
+    --accent: #3b8bff;
+    --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    --seg-track: rgba(255, 255, 255, .08);
+    --seg-on: #4a4a4f;
+    --seg-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 900px) { .wrap { padding: 0 32px; } }
+
+  header.top { padding: 40px 0 20px; }
+  header.top h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  header.top p { margin: 6px 0 0; color: var(--fg-2); max-width: 64ch; }
+
+  .controls {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid var(--line);
+  }
+  .controls .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; padding-top: 10px; padding-bottom: 10px; }
+  .ctl { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--fg-2); }
+  .ctl label { white-space: nowrap; }
+  .seg { display: inline-flex; padding: 2px; border-radius: 7px; background: var(--seg-track); }
+  .seg button {
+    appearance: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 12px;
+    padding: 3px 12px; border-radius: 5px; cursor: pointer; white-space: nowrap; line-height: 1.4;
+  }
+  .seg button[aria-pressed="true"] { background: var(--seg-on); box-shadow: var(--seg-shadow); font-weight: 600; }
+  .ctl .hintkey { margin-left: auto; color: var(--fg-3); font-size: 11px; }
+  .ctl kbd { font: inherit; font-size: 10px; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: 4px; }
+
+  section { padding: 24px 0 8px; }
+  section h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); }
+
+  .rail { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .card {
+    text-align: left; font: inherit; color: inherit; cursor: pointer;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .card:hover { border-color: var(--line-strong); }
+  .card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .card .name { display: flex; align-items: baseline; gap: 8px; }
+  .card .name b { font-size: 15px; font-weight: 600; }
+  .card .name span { font-size: 11px; color: var(--fg-2); }
+  .card .base { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; margin-left: auto; }
+  .card .flav { font-size: 11px; color: var(--fg-2); }
+  .card .pitch { font-size: 12px; color: var(--fg-2); line-height: 1.4; }
+  .strips { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+  .strip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; height: 10px; border-radius: 3px; overflow: hidden; }
+  .strip i { display: block; }
+
+  .stage-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stage-head h2 { margin: 0; }
+  .stage-head .sub { font-size: 12px; color: var(--fg-2); }
+  .stage { display: grid; gap: 20px; grid-template-columns: 1fr; }
+  .stage.both { grid-template-columns: 1fr; }
+  @media (min-width: 1200px) { .stage.both { grid-template-columns: 1fr 1fr; } }
+  .shot { border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); background: var(--bg-elev); }
+  .shot-cap { font-size: 11px; color: var(--fg-2); margin-top: 6px; }
+
+  .glance { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .glance button { appearance: none; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-elev); cursor: pointer; overflow: hidden; text-align: left; font: inherit; color: inherit; }
+  .glance button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .glance .cap { padding: 8px 12px; font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .glance .cap span { color: var(--fg-2); }
+  .glance .pair { display: grid; grid-template-columns: 1fr; }
+
+  .tokens { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .tokens-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tokens-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .tokens-head .btn { margin-left: auto; }
+  .btn { appearance: none; font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--fill); color: var(--fg); cursor: pointer; }
+  .btn:hover { background: var(--fill-hover); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .tok-group { margin-top: 16px; }
+  .tok-group h4 { margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); }
+  .tok-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 4px 20px; }
+  .tok { display: grid; grid-template-columns: 96px 1fr 1fr; align-items: center; gap: 8px; font-size: 11px; padding: 2px 0; }
+  .tok .k { color: var(--fg-2); font-family: var(--mono); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .sw i { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; background-image: linear-gradient(45deg, rgba(128,128,128,.25) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.25) 75%), linear-gradient(45deg, rgba(128,128,128,.25) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.25) 75%); background-size: 8px 8px; background-position: 0 0, 4px 4px; }
+  .sw i b { display: block; width: 100%; height: 100%; border-radius: 3px; }
+  .sw code { font-family: var(--mono); font-size: 10px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tok-cols { display: grid; grid-template-columns: 96px 1fr 1fr; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); margin-bottom: 4px; }
+  .fills { display: flex; gap: 2px; }
+  .fills i { width: 14px; height: 18px; display: block; border: 1px solid var(--line); }
+  .fills i:first-child { border-radius: 4px 0 0 4px; } .fills i:last-child { border-radius: 0 4px 4px 0; }
+  .catrow { display: grid; grid-template-columns: 96px 1fr 1fr; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; }
+  .catrow .k { color: var(--fg-2); }
+  .catcell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .catcell code { font-family: var(--mono); font-size: 10px; color: var(--fg-2); white-space: nowrap; }
+  .copy-fallback { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+  .toast.show { opacity: 1; }
+  .empty { padding: 40px; text-align: center; color: var(--fg-2); border: 1px dashed var(--line-strong); border-radius: 10px; }
+  footer { padding: 32px 0 48px; font-size: 11px; color: var(--fg-3); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Disktree palettes</h1>
+    <p>Candidate colour systems for Disktree's treemap and chrome, each painted on the same mock of the app so they can be compared as they would ship.</p>
+  </header>
+</div>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="ctl"><label>Appearance</label><div class="seg" data-ctl="appearance">
+      <button data-v="light">Light</button><button data-v="dark">Dark</button><button data-v="both">Side by side</button>
+    </div></div>
+    <div class="ctl"><label>Colour by</label><div class="seg" data-ctl="mode">
+      <button data-v="kind">Kind</button><button data-v="age">Age</button>
+    </div></div>
+    <div class="ctl"><label>Screen</label><div class="seg" data-ctl="screen">
+      <button data-v="explore">Explore</button><button data-v="review">Review</button>
+    </div></div>
+    <div class="ctl hintkey"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch palette</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section>
+    <h2>Palettes</h2>
+    <div class="rail" id="rail"></div>
+  </section>
+
+  <section>
+    <div class="stage-head"><h2 id="stage-title">Selected</h2><span class="sub" id="stage-sub"></span></div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <section>
+    <h2>All palettes at a glance</h2>
+    <div class="glance" id="glance"></div>
+  </section>
+
+  <section>
+    <h2>Tokens</h2>
+    <div class="tokens" id="tokens"></div>
+  </section>
+
+  <footer>Mock data: a 412.3 GiB home directory. Sizes, counts and paths are illustrative.</footer>
+</div>
+<script>
+// ---- palettes-catppuccin.js
+// Catppuccin palettes for Disktree: Latte for light; Frappé, Macchiato or
+// Mocha for dark. Generated by gen-catppuccin.mjs (OKLab blends); every
+// colour is literal.
+window.PALETTES = window.PALETTES || [];
+window.PALETTES.push({
+  id: 'catppuccin-frappe',
+  name: 'Catppuccin Frappé',
+  family: 'Catppuccin',
+  pitch: 'The faithful one: each category accent sinks into the canvas at a moderate strength and rises a little with depth, with the full accent in the strip. Calm and even, so a large tree still reads as one surface.',
+  flavours: { light: 'Latte', dark: 'Frappé' },
+  shape: {
+    tileRadius: 4,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'top',
+    stripWidth: 2,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#8839ef',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#2a2d3f,#3a3550)',
+      background: '#292c3c',
+      surface: '#303446',
+      sidebar: '#303446',
+      inset: '#232634',
+      foreground: '#c6d0f5',
+      secondary: '#a5adce',
+      bright: '#e2e7fa',
+      border: '#51576d',
+      divider: 'rgba(198,208,245,0.12)',
+      fill: 'rgba(198,208,245,0.06)',
+      accent: '#ca9ee6',
+      onAccent: '#232634',
+      highlight: '#ed9979',
+      onHighlight: '#232634',
+      danger: '#e78284',
+      success: '#a6d189',
+      warning: '#e5c890',
+      hatch: 'rgba(198,208,245,0.14)',
+      hover: 'rgba(198,208,245,0.6)',
+      label: '#c6d0f5',
+      labelDim: '#a5adce',
+      marked: { fill: '#5d434d', outline: '#e78284', text: '#e78284' },
+      meterTrack: 'rgba(198,208,245,0.1)',
+      meterUsed: 'rgba(198,208,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8caaee', fills: ['#373e56', '#3c445f', '#414b67', '#465170', '#4b587a'] },
+      agent: { accent: '#f2d5cf', fills: ['#3f3e4a', '#464450', '#4d4a55', '#54505b', '#5c5761'] },
+      toolchain: { accent: '#a6d189', fills: ['#374143', '#3c4847', '#424f4b', '#47564f', '#4d5d53'] },
+      synced: { accent: '#81c8be', fills: ['#34414c', '#384852', '#3c4f58', '#40565e', '#445d64'] },
+      git: { accent: '#f4b8e4', fills: ['#433d4f', '#4b4256', '#52485d', '#5b4e64', '#63546b'] },
+      media: { accent: '#ca9ee6', fills: ['#433d56', '#4a435e', '#524866', '#594e6e', '#615377'] },
+      documents: { accent: '#8890ae', fills: ['#3a3e50', '#404457', '#464b5e', '#4c5166', '#52586d'] },
+      cache: { accent: '#e5c890', fills: ['#3e3d43', '#454347', '#4c494b', '#54504f', '#5c5753'] },
+      other: { accent: '#737994', fills: ['#363a4b', '#3c4052', '#424659', '#484d61', '#4f5369'] },
+    },
+    age: {
+      swatches: ['#8caaee', '#859bd2', '#7e8fbc', '#7984a7', '#737994'],
+      fills: [
+        ['#373e56', '#3c445f', '#414b67', '#465170', '#4b587a'],
+        ['#373d53', '#3c435c', '#414a64', '#47506d', '#4c5776'],
+        ['#383e52', '#3d445b', '#434b63', '#48516c', '#4e5874'],
+        ['#383d50', '#3e4358', '#444a60', '#4a5068', '#505770'],
+        ['#363a4b', '#3c4052', '#424659', '#484d61', '#4f5369'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-macchiato',
+  name: 'Catppuccin Macchiato',
+  family: 'Catppuccin',
+  pitch: 'The faithful one: each category accent sinks into the canvas at a moderate strength and rises a little with depth, with the full accent in the strip. Calm and even, so a large tree still reads as one surface.',
+  flavours: { light: 'Latte', dark: 'Macchiato' },
+  shape: {
+    tileRadius: 4,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'top',
+    stripWidth: 2,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#8839ef',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#20233a,#2f2a4a)',
+      background: '#1e2030',
+      surface: '#24273a',
+      sidebar: '#24273a',
+      inset: '#181926',
+      foreground: '#cad3f5',
+      secondary: '#a5adcb',
+      bright: '#e4e9fa',
+      border: '#494d64',
+      divider: 'rgba(202,211,245,0.12)',
+      fill: 'rgba(202,211,245,0.06)',
+      accent: '#c6a0f6',
+      onAccent: '#181926',
+      highlight: '#f3a284',
+      onHighlight: '#181926',
+      danger: '#ed8796',
+      success: '#a6da95',
+      warning: '#eed49f',
+      hatch: 'rgba(202,211,245,0.14)',
+      hover: 'rgba(202,211,245,0.6)',
+      label: '#cad3f5',
+      labelDim: '#a5adcb',
+      marked: { fill: '#553a48', outline: '#ed8796', text: '#ed8796' },
+      meterTrack: 'rgba(202,211,245,0.1)',
+      meterUsed: 'rgba(202,211,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8aadf4', fills: ['#333b55', '#38415e', '#3d4867', '#424e70', '#475579'] },
+      agent: { accent: '#f6e2de', fills: ['#413f4a', '#48454f', '#4f4b55', '#56525b', '#5e5962'] },
+      toolchain: { accent: '#a6da95', fills: ['#384442', '#3c4b46', '#42524a', '#47594e', '#4c6052'] },
+      synced: { accent: '#8ad4cb', fills: ['#32424b', '#374951', '#3b5058', '#3f575e', '#435e64'] },
+      git: { accent: '#f5bde6', fills: ['#483d51', '#4f4357', '#57495e', '#604f66', '#68556d'] },
+      media: { accent: '#c6a0f6', fills: ['#403856', '#473e5e', '#4f4467', '#564a71', '#5e507a'] },
+      documents: { accent: '#858caa', fills: ['#313445', '#373a4c', '#3d4053', '#43465a', '#494d62'] },
+      cache: { accent: '#eed49f', fills: ['#423f41', '#494545', '#514c4a', '#59534f', '#615a53'] },
+      other: { accent: '#6e738d', fills: ['#2c2e3f', '#323445', '#383a4c', '#3e4053', '#44475a'] },
+    },
+    age: {
+      swatches: ['#8aadf4', '#829bd4', '#7b8dba', '#7480a3', '#6e738d'],
+      fills: [
+        ['#333b55', '#38415e', '#3d4867', '#424e70', '#475579'],
+        ['#31374e', '#363d57', '#3b445f', '#414b68', '#465171'],
+        ['#2f3449', '#353a50', '#3a4058', '#3f4760', '#454d68'],
+        ['#2e3144', '#33374b', '#393e53', '#3f445b', '#454b63'],
+        ['#2c2e3f', '#323445', '#383a4c', '#3e4053', '#44475a'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-mocha',
+  name: 'Catppuccin Mocha',
+  family: 'Catppuccin',
+  pitch: 'The faithful one: each category accent sinks into the canvas at a moderate strength and rises a little with depth, with the full accent in the strip. Calm and even, so a large tree still reads as one surface.',
+  flavours: { light: 'Latte', dark: 'Mocha' },
+  shape: {
+    tileRadius: 4,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'top',
+    stripWidth: 2,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#8839ef',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#191a2c,#28233f)',
+      background: '#181825',
+      surface: '#1e1e2e',
+      sidebar: '#1e1e2e',
+      inset: '#11111b',
+      foreground: '#cdd6f4',
+      secondary: '#a6adc8',
+      bright: '#e6eafa',
+      border: '#45475a',
+      divider: 'rgba(205,214,244,0.12)',
+      fill: 'rgba(205,214,244,0.06)',
+      accent: '#cba6f7',
+      onAccent: '#11111b',
+      highlight: '#f9ab8f',
+      onHighlight: '#11111b',
+      danger: '#f38ba8',
+      success: '#a6e3a1',
+      warning: '#f9e2af',
+      hatch: 'rgba(205,214,244,0.14)',
+      hover: 'rgba(205,214,244,0.6)',
+      label: '#cdd6f4',
+      labelDim: '#a6adc8',
+      marked: { fill: '#513544', outline: '#f38ba8', text: '#f38ba8' },
+      meterTrack: 'rgba(205,214,244,0.1)',
+      meterUsed: 'rgba(205,214,244,0.3)',
+    },
+    categories: {
+      code: { accent: '#89b4fa', fills: ['#2d364d', '#323d56', '#37435f', '#3c4a69', '#415173'] },
+      agent: { accent: '#fbf3f1', fills: ['#42414a', '#494750', '#4f4e56', '#57555d', '#5e5c63'] },
+      toolchain: { accent: '#a6e3a1', fills: ['#33403b', '#384740', '#3d4e45', '#425549', '#475c4e'] },
+      synced: { accent: '#8fded9', fills: ['#2f3f46', '#33464d', '#384d54', '#3c545a', '#405b61'] },
+      git: { accent: '#f5c2e7', fills: ['#433949', '#4b3f50', '#544558', '#5b4b5f', '#635165'] },
+      media: { accent: '#cba6f7', fills: ['#3b334c', '#423855', '#493e5d', '#504466', '#574a6e'] },
+      documents: { accent: '#848aa5', fills: ['#2b2d3b', '#313342', '#373949', '#3d3f50', '#434557'] },
+      cache: { accent: '#f9e2af', fills: ['#44403f', '#4b4743', '#524d48', '#5a544d', '#625b52'] },
+      other: { accent: '#6c7086', fills: ['#262734', '#2b2d3a', '#313341', '#373948', '#3d3f4f'] },
+    },
+    age: {
+      swatches: ['#89b4fa', '#819fd6', '#7a8eb9', '#737f9f', '#6c7086'],
+      fills: [
+        ['#2d364d', '#323d56', '#37435f', '#3c4a69', '#415173'],
+        ['#2b3145', '#30374d', '#353d55', '#3a445e', '#3f4b67'],
+        ['#292e3f', '#2e3447', '#343a4f', '#394057', '#3f475f'],
+        ['#282a3a', '#2d3041', '#323648', '#383c4f', '#3d4257'],
+        ['#262734', '#2b2d3a', '#313341', '#373948', '#3d3f4f'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-pastel-frappe',
+  name: 'Catppuccin Pastel Frappé',
+  family: 'Catppuccin',
+  pitch: 'Candy. Dark mode paints the pastels at full strength with dark ink on them; Latte tints the tiles softly and keeps the usual text. Playful, quick to scan by hue, and the biggest departure from a grey tool.',
+  flavours: { light: 'Latte', dark: 'Frappé' },
+  shape: {
+    tileRadius: 5,
+    gapTop: 8,
+    gapDeep: 3,
+    strip: 'dot',
+    stripWidth: 6,
+    sheen: 0.04,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#ab5494',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.7)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#209fb5', '#57a0b4', '#73a0b2', '#89a0b1', '#9ca0b0'],
+      fills: [
+        ['#d2e4ea', '#c6dee6', '#b9d8e2', '#add2dd', '#9fccd8'],
+        ['#d9e5eb', '#cddee6', '#c1d8e1', '#b5d1dc', '#a9cbd6'],
+        ['#dce5eb', '#d2dee5', '#c8d7e0', '#bdd0da', '#b2c9d4'],
+        ['#dfe5eb', '#d6dde5', '#cdd6de', '#c3ced8', '#bac7d2'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#2a2d3f,#3a3550)',
+      background: '#292c3c',
+      surface: '#303446',
+      sidebar: '#303446',
+      inset: '#232634',
+      foreground: '#c6d0f5',
+      secondary: '#a5adce',
+      bright: '#e2e7fa',
+      border: '#51576d',
+      divider: 'rgba(198,208,245,0.12)',
+      fill: 'rgba(198,208,245,0.06)',
+      accent: '#f4b8e4',
+      onAccent: '#232634',
+      highlight: '#ed9979',
+      onHighlight: '#232634',
+      danger: '#e78284',
+      success: '#a6d189',
+      warning: '#e5c890',
+      hatch: 'rgba(35,38,52,0.18)',
+      hover: 'rgba(35,38,52,0.8)',
+      label: '#232634',
+      labelDim: '#292c3c',
+      marked: { fill: '#e78284', outline: '#f6bbba', text: '#232634' },
+      meterTrack: 'rgba(198,208,245,0.1)',
+      meterUsed: 'rgba(198,208,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8caaee', fills: ['#8caaee', '#97b3f0', '#a2bbf2', '#adc3f4', '#b8cbf6'], text: '#232634' },
+      agent: { accent: '#f2d5cf', fills: ['#f2d5cf', '#f5dfda', '#f8e9e6', '#fcf3f1', '#fffdfd'], text: '#232634' },
+      toolchain: { accent: '#a6d189', fills: ['#a6d189', '#b1d797', '#bcdda6', '#c7e2b5', '#d2e8c4'], text: '#232634' },
+      synced: { accent: '#81c8be', fills: ['#81c8be', '#91cfc6', '#a1d5cd', '#afdcd5', '#bee2dc'], text: '#232634' },
+      git: { accent: '#f4b8e4', fills: ['#f4b8e4', '#f6c3e8', '#f8ceec', '#fad9f1', '#fce4f5'], text: '#232634' },
+      media: { accent: '#ca9ee6', fills: ['#ca9ee6', '#cfa8e9', '#d5b2ec', '#dabcee', '#e0c6f1'], text: '#232634' },
+      documents: { accent: '#8890ae', fills: ['#8890ae', '#9198b4', '#99a1ba', '#a2a9c0', '#abb1c7'], text: '#232634' },
+      cache: { accent: '#e5c890', fills: ['#e5c890', '#e9d1a2', '#edd9b3', '#f1e1c4', '#f5ead4'], text: '#232634' },
+      other: { accent: '#949cbb', fills: ['#949cbb', '#9da4c1', '#a6adc7', '#b0b6cd', '#b9bfd3'], text: '#232634' },
+    },
+    age: {
+      swatches: ['#85c1dc', '#8bb6d2', '#8fadca', '#92a4c2', '#949cbb'],
+      fills: [
+        ['#85c1dc', '#94c8e0', '#a2cfe4', '#b0d6e8', '#bedeec'],
+        ['#8bb6d2', '#97bed7', '#a4c6dc', '#b1cee1', '#bdd6e6'],
+        ['#8fadca', '#99b5cf', '#a4bdd4', '#afc5da', '#bacddf'],
+        ['#92a4c2', '#9cacc8', '#a6b5ce', '#b0bdd3', '#bac5d9'],
+        ['#949cbb', '#9da4c1', '#a6adc7', '#b0b6cd', '#b9bfd3'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-pastel-macchiato',
+  name: 'Catppuccin Pastel Macchiato',
+  family: 'Catppuccin',
+  pitch: 'Candy. Dark mode paints the pastels at full strength with dark ink on them; Latte tints the tiles softly and keeps the usual text. Playful, quick to scan by hue, and the biggest departure from a grey tool.',
+  flavours: { light: 'Latte', dark: 'Macchiato' },
+  shape: {
+    tileRadius: 5,
+    gapTop: 8,
+    gapDeep: 3,
+    strip: 'dot',
+    stripWidth: 6,
+    sheen: 0.04,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#ab5494',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.7)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#209fb5', '#57a0b4', '#73a0b2', '#89a0b1', '#9ca0b0'],
+      fills: [
+        ['#d2e4ea', '#c6dee6', '#b9d8e2', '#add2dd', '#9fccd8'],
+        ['#d9e5eb', '#cddee6', '#c1d8e1', '#b5d1dc', '#a9cbd6'],
+        ['#dce5eb', '#d2dee5', '#c8d7e0', '#bdd0da', '#b2c9d4'],
+        ['#dfe5eb', '#d6dde5', '#cdd6de', '#c3ced8', '#bac7d2'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#20233a,#2f2a4a)',
+      background: '#1e2030',
+      surface: '#24273a',
+      sidebar: '#24273a',
+      inset: '#181926',
+      foreground: '#cad3f5',
+      secondary: '#a5adcb',
+      bright: '#e4e9fa',
+      border: '#494d64',
+      divider: 'rgba(202,211,245,0.12)',
+      fill: 'rgba(202,211,245,0.06)',
+      accent: '#f5bde6',
+      onAccent: '#181926',
+      highlight: '#f3a284',
+      onHighlight: '#181926',
+      danger: '#ed8796',
+      success: '#a6da95',
+      warning: '#eed49f',
+      hatch: 'rgba(24,25,38,0.18)',
+      hover: 'rgba(24,25,38,0.8)',
+      label: '#181926',
+      labelDim: '#1e2030',
+      marked: { fill: '#ed8796', outline: '#f9bec4', text: '#181926' },
+      meterTrack: 'rgba(202,211,245,0.1)',
+      meterUsed: 'rgba(202,211,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8aadf4', fills: ['#8aadf4', '#95b5f6', '#a0bdf7', '#abc5f8', '#b6cdfa'], text: '#181926' },
+      agent: { accent: '#f6e2de', fills: ['#e9d7d4', '#eee1de', '#f4ebe9', '#f9f5f4', '#ffffff'], text: '#181926' },
+      toolchain: { accent: '#a6da95', fills: ['#a6da95', '#b2dfa4', '#bee4b2', '#cae9c0', '#d6eece'], text: '#181926' },
+      synced: { accent: '#8ad4cb', fills: ['#8ad4cb', '#9bdad2', '#abe0d9', '#bbe6e0', '#ccece7'], text: '#181926' },
+      git: { accent: '#f5bde6', fills: ['#f5bde6', '#f7c8ea', '#f9d3ee', '#fbdef3', '#fce9f7'], text: '#181926' },
+      media: { accent: '#c6a0f6', fills: ['#c6a0f6', '#ccaaf7', '#d1b4f9', '#d7befa', '#ddc8fb'], text: '#181926' },
+      documents: { accent: '#858caa', fills: ['#858caa', '#8e94b0', '#969db7', '#9fa5bd', '#a9aec4'], text: '#181926' },
+      cache: { accent: '#eed49f', fills: ['#eed49f', '#f1dcb2', '#f5e4c4', '#f8ecd6', '#fbf5e8'], text: '#181926' },
+      other: { accent: '#939ab7', fills: ['#939ab7', '#9ca2bd', '#a5abc3', '#aeb4ca', '#b8bdd0'], text: '#181926' },
+    },
+    age: {
+      swatches: ['#7dc4e4', '#86b7d6', '#8badcb', '#90a3c1', '#939ab7'],
+      fills: [
+        ['#7dc4e4', '#8ccbe7', '#9dd2eb', '#acd9ee', '#bbe0f1'],
+        ['#86b7d6', '#93bfda', '#a1c7df', '#aecfe4', '#bbd7e8'],
+        ['#8badcb', '#96b5d0', '#a1bdd5', '#adc5db', '#b8cddf'],
+        ['#90a3c1', '#9aabc7', '#a4b4cc', '#aebcd2', '#b8c4d8'],
+        ['#939ab7', '#9ca2bd', '#a5abc3', '#aeb4ca', '#b8bdd0'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-pastel-mocha',
+  name: 'Catppuccin Pastel Mocha',
+  family: 'Catppuccin',
+  pitch: 'Candy. Dark mode paints the pastels at full strength with dark ink on them; Latte tints the tiles softly and keeps the usual text. Playful, quick to scan by hue, and the biggest departure from a grey tool.',
+  flavours: { light: 'Latte', dark: 'Mocha' },
+  shape: {
+    tileRadius: 5,
+    gapTop: 8,
+    gapDeep: 3,
+    strip: 'dot',
+    stripWidth: 6,
+    sheen: 0.04,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#ab5494',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.7)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eddfde', '#ecd6d3', '#ebcdc8', '#eac4bd', '#e8bbb3'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dec7', '#bcd9bb', '#b2d4af', '#a7cfa3'] },
+      synced: { accent: '#179299', fills: ['#d7e5e9', '#cbdee3', '#bfd8dc', '#b3d2d6', '#a7ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f1daed', '#f1d0ea', '#f1c6e6', '#f1bce3', '#f1b2df'] },
+      media: { accent: '#8839ef', fills: ['#e3e0f7', '#ddd8f7', '#d8cff7', '#d2c7f8', '#ccbff8'] },
+      documents: { accent: '#848ebd', fills: ['#e0e4ee', '#d8dcea', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#edddce', '#ecd5bf', '#ebcdaf', '#eac5a0', '#e9bd90'] },
+      other: { accent: '#9ca0b0', fills: ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'] },
+    },
+    age: {
+      swatches: ['#209fb5', '#57a0b4', '#73a0b2', '#89a0b1', '#9ca0b0'],
+      fills: [
+        ['#d2e4ea', '#c6dee6', '#b9d8e2', '#add2dd', '#9fccd8'],
+        ['#d9e5eb', '#cddee6', '#c1d8e1', '#b5d1dc', '#a9cbd6'],
+        ['#dce5eb', '#d2dee5', '#c8d7e0', '#bdd0da', '#b2c9d4'],
+        ['#dfe5eb', '#d6dde5', '#cdd6de', '#c3ced8', '#bac7d2'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#191a2c,#28233f)',
+      background: '#181825',
+      surface: '#1e1e2e',
+      sidebar: '#1e1e2e',
+      inset: '#11111b',
+      foreground: '#cdd6f4',
+      secondary: '#a6adc8',
+      bright: '#e6eafa',
+      border: '#45475a',
+      divider: 'rgba(205,214,244,0.12)',
+      fill: 'rgba(205,214,244,0.06)',
+      accent: '#f5c2e7',
+      onAccent: '#11111b',
+      highlight: '#f9ab8f',
+      onHighlight: '#11111b',
+      danger: '#f38ba8',
+      success: '#a6e3a1',
+      warning: '#f9e2af',
+      hatch: 'rgba(17,17,27,0.18)',
+      hover: 'rgba(17,17,27,0.8)',
+      label: '#11111b',
+      labelDim: '#181825',
+      marked: { fill: '#f38ba8', outline: '#fcc0ce', text: '#11111b' },
+      meterTrack: 'rgba(205,214,244,0.1)',
+      meterUsed: 'rgba(205,214,244,0.3)',
+    },
+    categories: {
+      code: { accent: '#89b4fa', fills: ['#89b4fa', '#95bcfb', '#a1c4fc', '#adccfd', '#b9d4fe'], text: '#11111b' },
+      agent: { accent: '#fbf3f1', fills: ['#e0d9d9', '#e8e2e2', '#efecec', '#f7f5f5', '#fffefe'], text: '#11111b' },
+      toolchain: { accent: '#a6e3a1', fills: ['#a6e3a1', '#b4e7af', '#c1ecbd', '#cef0cb', '#dbf4d9'], text: '#11111b' },
+      synced: { accent: '#8fded9', fills: ['#8fded9', '#a2e3df', '#b4e9e5', '#c6eeeb', '#d7f3f1'], text: '#11111b' },
+      git: { accent: '#f5c2e7', fills: ['#f5c2e7', '#f7cdeb', '#f9d8f0', '#fbe3f4', '#fdeef8'], text: '#11111b' },
+      media: { accent: '#cba6f7', fills: ['#cba6f7', '#d1b0f8', '#d6bafa', '#dcc4fb', '#e2cefc'], text: '#11111b' },
+      documents: { accent: '#848aa5', fills: ['#848aa5', '#8d92ac', '#959bb2', '#9ea3b8', '#a7abbf'], text: '#11111b' },
+      cache: { accent: '#f9e2af', fills: ['#f9e2af', '#fbe9c3', '#fcf0d7', '#fef8eb', '#ffffff'], text: '#11111b' },
+      other: { accent: '#9399b2', fills: ['#9399b2', '#9ca1b8', '#a5aabf', '#aeb3c6', '#b8bccd'], text: '#11111b' },
+    },
+    age: {
+      swatches: ['#74c7ec', '#81b9da', '#89aecc', '#8ea3bf', '#9399b2'],
+      fills: [
+        ['#74c7ec', '#86ceee', '#98d5f1', '#a9dcf4', '#bae2f6'],
+        ['#81b9da', '#8fc0de', '#9cc8e2', '#aacfe6', '#b7d7ea'],
+        ['#89aecc', '#94b6d1', '#a0bed6', '#abc6db', '#b7cee0'],
+        ['#8ea3bf', '#98abc5', '#a2b3cb', '#acbbd0', '#b6c3d6'],
+        ['#9399b2', '#9ca1b8', '#a5aabf', '#aeb3c6', '#b8bccd'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-quiet-frappe',
+  name: 'Catppuccin Quiet Frappé',
+  family: 'Catppuccin',
+  pitch: 'Reserved. Tiles are neutral surface steps and the category lives in a slim left strip and the legend, so colour is spent only on the highlight and the marks. The closest to a professional Mac tool.',
+  flavours: { light: 'Latte', dark: 'Frappé' },
+  shape: {
+    tileRadius: 3,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'left',
+    stripWidth: 3,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#1e66f5',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      agent: { accent: '#dc8a78', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      toolchain: { accent: '#40a02b', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      synced: { accent: '#179299', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      git: { accent: '#ea76cb', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      media: { accent: '#8839ef', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      documents: { accent: '#848ebd', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      cache: { accent: '#df8e1d', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      other: { accent: '#9ca0b0', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#2a2d3f,#3a3550)',
+      background: '#292c3c',
+      surface: '#303446',
+      sidebar: '#303446',
+      inset: '#232634',
+      foreground: '#c6d0f5',
+      secondary: '#a5adce',
+      bright: '#e2e7fa',
+      border: '#51576d',
+      divider: 'rgba(198,208,245,0.12)',
+      fill: 'rgba(198,208,245,0.06)',
+      accent: '#8caaee',
+      onAccent: '#232634',
+      highlight: '#ed9979',
+      onHighlight: '#232634',
+      danger: '#e78284',
+      success: '#a6d189',
+      warning: '#e5c890',
+      hatch: 'rgba(198,208,245,0.14)',
+      hover: 'rgba(198,208,245,0.6)',
+      label: '#c6d0f5',
+      labelDim: '#a5adce',
+      marked: { fill: '#5d434d', outline: '#e78284', text: '#e78284' },
+      meterTrack: 'rgba(198,208,245,0.1)',
+      meterUsed: 'rgba(198,208,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8caaee', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      agent: { accent: '#f2d5cf', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      toolchain: { accent: '#a6d189', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      synced: { accent: '#81c8be', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      git: { accent: '#f4b8e4', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      media: { accent: '#ca9ee6', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      documents: { accent: '#8890ae', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      cache: { accent: '#e5c890', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+      other: { accent: '#737994', fills: ['#303446', '#353a4c', '#3b4053', '#41465a', '#474c61'] },
+    },
+    age: {
+      swatches: ['#8caaee', '#859bd2', '#7e8fbc', '#7984a7', '#737994'],
+      fills: [
+        ['#383f55', '#3d455e', '#424b67', '#475170', '#4c5879'],
+        ['#393e54', '#3e455c', '#434b65', '#48516e', '#4e5877'],
+        ['#383e52', '#3e445b', '#434b63', '#49516b', '#4f5874'],
+        ['#3a3e53', '#3f455a', '#454b62', '#4b516a', '#515871'],
+        ['#393e51', '#3f4458', '#464a5f', '#4c5167', '#53586e'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-quiet-macchiato',
+  name: 'Catppuccin Quiet Macchiato',
+  family: 'Catppuccin',
+  pitch: 'Reserved. Tiles are neutral surface steps and the category lives in a slim left strip and the legend, so colour is spent only on the highlight and the marks. The closest to a professional Mac tool.',
+  flavours: { light: 'Latte', dark: 'Macchiato' },
+  shape: {
+    tileRadius: 3,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'left',
+    stripWidth: 3,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#1e66f5',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      agent: { accent: '#dc8a78', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      toolchain: { accent: '#40a02b', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      synced: { accent: '#179299', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      git: { accent: '#ea76cb', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      media: { accent: '#8839ef', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      documents: { accent: '#848ebd', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      cache: { accent: '#df8e1d', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      other: { accent: '#9ca0b0', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#20233a,#2f2a4a)',
+      background: '#1e2030',
+      surface: '#24273a',
+      sidebar: '#24273a',
+      inset: '#181926',
+      foreground: '#cad3f5',
+      secondary: '#a5adcb',
+      bright: '#e4e9fa',
+      border: '#494d64',
+      divider: 'rgba(202,211,245,0.12)',
+      fill: 'rgba(202,211,245,0.06)',
+      accent: '#8aadf4',
+      onAccent: '#181926',
+      highlight: '#f3a284',
+      onHighlight: '#181926',
+      danger: '#ed8796',
+      success: '#a6da95',
+      warning: '#eed49f',
+      hatch: 'rgba(202,211,245,0.14)',
+      hover: 'rgba(202,211,245,0.6)',
+      label: '#cad3f5',
+      labelDim: '#a5adcb',
+      marked: { fill: '#553a48', outline: '#ed8796', text: '#ed8796' },
+      meterTrack: 'rgba(202,211,245,0.1)',
+      meterUsed: 'rgba(202,211,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8aadf4', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      agent: { accent: '#f6e2de', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      toolchain: { accent: '#a6da95', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      synced: { accent: '#8ad4cb', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      git: { accent: '#f5bde6', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      media: { accent: '#c6a0f6', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      documents: { accent: '#858caa', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      cache: { accent: '#eed49f', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+      other: { accent: '#6e738d', fills: ['#24273a', '#292d40', '#2f3347', '#35394d', '#3b3f54'] },
+    },
+    age: {
+      swatches: ['#8aadf4', '#829bd4', '#7b8dba', '#7480a3', '#6e738d'],
+      fills: [
+        ['#353d58', '#3a4361', '#3f4a6a', '#445073', '#49577c'],
+        ['#333a53', '#38405b', '#3e4664', '#434d6c', '#495476'],
+        ['#32384f', '#383e57', '#3e455f', '#434b68', '#495270'],
+        ['#31364b', '#373c52', '#3c425a', '#424962', '#484f6a'],
+        ['#303448', '#363a4f', '#3c4056', '#43465d', '#484d63'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-quiet-mocha',
+  name: 'Catppuccin Quiet Mocha',
+  family: 'Catppuccin',
+  pitch: 'Reserved. Tiles are neutral surface steps and the category lives in a slim left strip and the legend, so colour is spent only on the highlight and the marks. The closest to a professional Mac tool.',
+  flavours: { light: 'Latte', dark: 'Mocha' },
+  shape: {
+    tileRadius: 3,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'left',
+    stripWidth: 3,
+    sheen: 0,
+    vibrancy: false,
+    windowRadius: 10,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#d9dcec,#e9dbe6)',
+      background: '#e6e9ef',
+      surface: '#eff1f5',
+      sidebar: '#eff1f5',
+      inset: '#dce0e8',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: '#bcc0cc',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#1e66f5',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      agent: { accent: '#dc8a78', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      toolchain: { accent: '#40a02b', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      synced: { accent: '#179299', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      git: { accent: '#ea76cb', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      media: { accent: '#8839ef', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      documents: { accent: '#848ebd', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      cache: { accent: '#df8e1d', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+      other: { accent: '#9ca0b0', fills: ['#eff1f5', '#e7e9ef', '#dfe2e8', '#d8dae2', '#d0d3dc'] },
+    },
+    age: {
+      swatches: ['#1e66f5', '#497ce2', '#688bd2', '#8396c1', '#9ca0b0'],
+      fills: [
+        ['#d6e2f7', '#ccdbf8', '#c0d4f9', '#b5cdf9', '#aac6fa'],
+        ['#d8e2f4', '#cedbf3', '#c3d4f3', '#b9cdf2', '#afc6f1'],
+        ['#dce3f1', '#d2dcef', '#c8d4ed', '#becdea', '#b4c6e8'],
+        ['#e0e4ee', '#d6ddea', '#cdd5e6', '#c4cde1', '#bac5dd'],
+        ['#e3e5eb', '#dbdde4', '#d2d5dd', '#cbcdd7', '#c2c5d0'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#191a2c,#28233f)',
+      background: '#181825',
+      surface: '#1e1e2e',
+      sidebar: '#1e1e2e',
+      inset: '#11111b',
+      foreground: '#cdd6f4',
+      secondary: '#a6adc8',
+      bright: '#e6eafa',
+      border: '#45475a',
+      divider: 'rgba(205,214,244,0.12)',
+      fill: 'rgba(205,214,244,0.06)',
+      accent: '#89b4fa',
+      onAccent: '#11111b',
+      highlight: '#f9ab8f',
+      onHighlight: '#11111b',
+      danger: '#f38ba8',
+      success: '#a6e3a1',
+      warning: '#f9e2af',
+      hatch: 'rgba(205,214,244,0.14)',
+      hover: 'rgba(205,214,244,0.6)',
+      label: '#cdd6f4',
+      labelDim: '#a6adc8',
+      marked: { fill: '#513544', outline: '#f38ba8', text: '#f38ba8' },
+      meterTrack: 'rgba(205,214,244,0.1)',
+      meterUsed: 'rgba(205,214,244,0.3)',
+    },
+    categories: {
+      code: { accent: '#89b4fa', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      agent: { accent: '#fbf3f1', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      toolchain: { accent: '#a6e3a1', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      synced: { accent: '#8fded9', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      git: { accent: '#f5c2e7', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      media: { accent: '#cba6f7', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      documents: { accent: '#848aa5', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      cache: { accent: '#f9e2af', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+      other: { accent: '#6c7086', fills: ['#1e1e2e', '#232434', '#292a3a', '#2f2f41', '#343547'] },
+    },
+    age: {
+      swatches: ['#89b4fa', '#819fd6', '#7a8eb9', '#737f9f', '#6c7086'],
+      fills: [
+        ['#30364e', '#343c57', '#39425f', '#3d4968', '#424f71'],
+        ['#2e3349', '#333951', '#383f59', '#3d4662', '#434d6b'],
+        ['#2d3044', '#32364c', '#373c54', '#3c435c', '#424964'],
+        ['#2c2e41', '#323448', '#373b50', '#3d4157', '#43485f'],
+        ['#2b2b3d', '#313243', '#37384a', '#3d3e51', '#434558'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'catppuccin-glass-frappe',
+  name: 'Catppuccin Glass Frappé',
+  family: 'Catppuccin',
+  pitch: 'Deferred. Sonoma vibrancy on Frappé: a translucent sidebar and title bar over a toned desktop, rounded frosted tiles with a soft sheen and lavender controls. For people who keep the wallpaper in view.',
+  flavours: { light: 'Latte', dark: 'Frappé' },
+  shape: {
+    tileRadius: 6,
+    gapTop: 6,
+    gapDeep: 2,
+    strip: 'top',
+    stripWidth: 2,
+    sheen: 0.07,
+    vibrancy: true,
+    windowRadius: 12,
+  },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#cfd6f0 0%,#dfe9f2 45%,#ecd6e6 100%)',
+      background: 'rgba(230,233,239,0.78)',
+      surface: '#eff1f5',
+      sidebar: 'rgba(239,241,245,0.74)',
+      inset: '#eff1f5',
+      foreground: '#4c4f69',
+      secondary: '#5c5f77',
+      bright: '#2c2e3e',
+      border: 'rgba(76,79,105,0.16)',
+      divider: 'rgba(76,79,105,0.14)',
+      fill: 'rgba(76,79,105,0.05)',
+      accent: '#5c6dcf',
+      onAccent: '#ffffff',
+      highlight: '#f35422',
+      onHighlight: '#11111b',
+      danger: '#d20f39',
+      success: '#40a02b',
+      warning: '#df8e1d',
+      hatch: 'rgba(76,79,105,0.16)',
+      hover: 'rgba(76,79,105,0.6)',
+      label: '#4c4f69',
+      labelDim: '#6c6f85',
+      marked: { fill: '#f0ccce', outline: '#d20f39', text: '#d20f39' },
+      meterTrack: 'rgba(76,79,105,0.1)',
+      meterUsed: 'rgba(76,79,105,0.3)',
+    },
+    categories: {
+      code: { accent: '#1e66f5', fills: ['#d5e2f8', '#cadbf8', '#c0d4f9', '#b4cdfa', '#a9c6fa'] },
+      agent: { accent: '#dc8a78', fills: ['#eedfde', '#edd6d3', '#eccdc8', '#eac4bd', '#e8bbb2'] },
+      toolchain: { accent: '#40a02b', fills: ['#d1e3d3', '#c7dfc6', '#bcdabb', '#b2d4af', '#a7d0a2'] },
+      synced: { accent: '#179299', fills: ['#d6e4e8', '#cadee2', '#bed8dd', '#b2d2d6', '#a6ccd0'] },
+      git: { accent: '#ea76cb', fills: ['#f2daed', '#f2d0ea', '#f2c6e6', '#f2bce3', '#f1b2e0'] },
+      media: { accent: '#8839ef', fills: ['#e2def7', '#dcd6f7', '#d7cef8', '#d1c6f8', '#ccbdf9'] },
+      documents: { accent: '#848ebd', fills: ['#e1e3ee', '#d7dce9', '#cfd4e5', '#c6cce1', '#bec4dd'] },
+      cache: { accent: '#df8e1d', fills: ['#eeddcc', '#edd5bd', '#eccdad', '#ebc59e', '#e9bd8f'] },
+      other: { accent: '#9ca0b0', fills: ['#e2e5eb', '#dbdde4', '#d2d5de', '#cacdd6', '#c2c5cf'] },
+    },
+    age: {
+      swatches: ['#7287fd', '#7e90e7', '#8897d4', '#929cc2', '#9ca0b0'],
+      fills: [
+        ['#d9e1f8', '#d0daf9', '#c7d2fa', '#bdcbfb', '#b5c3fc'],
+        ['#dbe1f5', '#d1daf4', '#cad2f3', '#c0cbf2', '#b8c3f1'],
+        ['#dfe3f1', '#d5dbee', '#cdd3eb', '#c3cce9', '#bac4e6'],
+        ['#e2e4ee', '#d8dde9', '#d0d5e5', '#c7cde0', '#bfc5dc'],
+        ['#e2e5eb', '#dbdde4', '#d2d5de', '#cacdd6', '#c2c5cf'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#3c3d63 0%,#2f4058 45%,#4a3556 100%)',
+      background: 'rgba(41,44,60,0.78)',
+      surface: '#303446',
+      sidebar: 'rgba(48,52,70,0.72)',
+      inset: '#303446',
+      foreground: '#c6d0f5',
+      secondary: '#a5adce',
+      bright: '#e2e7fa',
+      border: 'rgba(198,208,245,0.16)',
+      divider: 'rgba(198,208,245,0.12)',
+      fill: 'rgba(198,208,245,0.06)',
+      accent: '#babbf1',
+      onAccent: '#232634',
+      highlight: '#ed9979',
+      onHighlight: '#232634',
+      danger: '#e78284',
+      success: '#a6d189',
+      warning: '#e5c890',
+      hatch: 'rgba(198,208,245,0.14)',
+      hover: 'rgba(198,208,245,0.6)',
+      label: '#c6d0f5',
+      labelDim: '#a5adce',
+      marked: { fill: '#674d5a', outline: '#e78284', text: '#e78284' },
+      meterTrack: 'rgba(198,208,245,0.1)',
+      meterUsed: 'rgba(198,208,245,0.3)',
+    },
+    categories: {
+      code: { accent: '#8caaee', fills: ['#393e52', '#3e445b', '#434b63', '#48516c', '#4d5875'] },
+      agent: { accent: '#f2d5cf', fills: ['#3a3d4f', '#414354', '#484959', '#50505f', '#585764'] },
+      toolchain: { accent: '#a6d189', fills: ['#3a3f4e', '#3e4652', '#444d55', '#495459', '#4e5b5c'] },
+      synced: { accent: '#81c8be', fills: ['#393f50', '#3c4656', '#414d5c', '#455561', '#4a5c67'] },
+      git: { accent: '#f4b8e4', fills: ['#3b3d50', '#434356', '#4c495e', '#554f64', '#5d556b'] },
+      media: { accent: '#ca9ee6', fills: ['#3d3f54', '#45445c', '#4d4a63', '#554f6b', '#5c5573'] },
+      documents: { accent: '#8890ae', fills: ['#3a3e51', '#404458', '#464b5f', '#4c5266', '#53586e'] },
+      cache: { accent: '#e5c890', fills: ['#3a3d4d', '#414351', '#494a55', '#515159', '#59575d'] },
+      other: { accent: '#737994', fills: ['#3a3e51', '#404458', '#464b5f', '#4d5166', '#53586d'] },
+    },
+    age: {
+      swatches: ['#babbf1', '#a4a7d4', '#9296bd', '#8287a8', '#737994'],
+      fills: [
+        ['#3a3e52', '#404459', '#474b60', '#4d5168', '#545770'],
+        ['#3a3e51', '#404459', '#474b60', '#4d5168', '#545770'],
+        ['#3a3e51', '#404458', '#464a60', '#4d5167', '#545870'],
+        ['#3a3e51', '#404458', '#464a60', '#4d5166', '#53586e'],
+        ['#3a3e51', '#404458', '#464b5f', '#4d5166', '#53586d'],
+      ],
+    },
+  },
+});
+
+</script>
+<script>
+// ---- palettes-native.js
+// Three palettes for Disktree beyond Catppuccin, generated by gen-native.mjs
+// (OKLab maths there; this file is plain data, every colour resolved).
+window.PALETTES = window.PALETTES || [];
+window.PALETTES.push({
+  id: 'aqua',
+  name: 'Aqua',
+  family: 'macOS',
+  pitch:
+    'What Apple would ship: real AppKit chrome, a translucent sidebar, and the system colours as clean luminous tints. Selection and reclaim totals are system orange, so they never fight the legend.',
+  flavours: { light: 'Light', dark: 'Dark' },
+  shape: { tileRadius: 5, gapTop: 6, gapDeep: 2, strip: 'top', stripWidth: 2, sheen: 0.06, vibrancy: true, windowRadius: 10 },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#a8bfe6,#e5c9dc)',
+      background: '#ececec',
+      surface: '#ffffff',
+      sidebar: 'rgba(240,240,240,.78)',
+      inset: '#f7f7f8',
+      foreground: 'rgba(0,0,0,.85)',
+      secondary: '#5d5d62',
+      bright: '#000000',
+      border: '#d5d5d8',
+      divider: 'rgba(0,0,0,.1)',
+      fill: 'rgba(0,0,0,.05)',
+      accent: '#0070ec',
+      onAccent: '#ffffff',
+      highlight: '#ff9500',
+      onHighlight: '#1c1c1e',
+      danger: '#ff3b30',
+      success: '#34c759',
+      warning: '#ff9500',
+      hatch: 'rgba(0,0,0,.17)',
+      hover: 'rgba(0,0,0,.5)',
+      label: 'rgba(0,0,0,.84)',
+      labelDim: 'rgba(0,0,0,.52)',
+      marked: { fill: '#ffcdc5', outline: '#ff3b30', text: '#b3251c' },
+      meterTrack: 'rgba(0,0,0,.08)',
+      meterUsed: 'rgba(0,0,0,.3)',
+    },
+    categories: {
+      code: { accent: '#007aff', fills: ['#dfecff', '#d2e5ff', '#c5ddff', '#b7d5ff', '#aecdf9'] },
+      agent: { accent: '#af52de', fills: ['#f4e4ff', '#f0d9ff', '#ebcefd', '#e2c6f4', '#dabeec'] },
+      toolchain: { accent: '#34c759', fills: ['#cdf9d1', '#c5f0c9', '#bde8c1', '#b5e0b9', '#add8b1'] },
+      synced: { accent: '#30b0c7', fills: ['#c6f5ff', '#adf0ff', '#a4e8f6', '#9cdfee', '#94d7e6'] },
+      git: { accent: '#fa2d7f', fills: ['#ffe3e9', '#ffd7df', '#ffcbd6', '#fbc0cd', '#f3b8c5'] },
+      media: { accent: '#5856d6', fills: ['#e6eaff', '#dce1ff', '#d2d8ff', '#c8cfff', '#c0c7f8'] },
+      documents: { accent: '#8e8e93', fills: ['#e5ecf3', '#dde4eb', '#d5dbe3', '#cdd3da', '#c5cbd2'] },
+      cache: { accent: '#ffcc00', fills: ['#ffeab0', '#f9e1a2', '#f0d99a', '#e8d192', '#e0c98a'] },
+      other: { accent: '#aeaeb2', fills: ['#e9ebee', '#e1e3e5', '#d9dbdd', '#d1d3d5', '#c8cbcd'] },
+    },
+    age: {
+      swatches: ['#2e78dc', '#5687cd', '#7394c3', '#8fa0b8', '#ababab'],
+      fills: [
+        ['#bad6ff', '#adceff', '#9fc6ff', '#93befc', '#8cb6f4'],
+        ['#c3dcff', '#b6d4ff', '#abccfb', '#a3c4f2', '#9cbcea'],
+        ['#cde1ff', '#c3d9f9', '#bbd1f1', '#b3c9e8', '#abc1e0'],
+        ['#dbe6f6', '#d3deee', '#cbd6e6', '#c3cedd', '#bbc6d5'],
+        ['#ebebeb', '#e3e3e3', '#dadada', '#d2d2d2', '#cacaca'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#2a3654,#4a2f52)',
+      background: '#2b2b2d',
+      surface: '#323234',
+      sidebar: 'rgba(46,46,50,.74)',
+      inset: '#1e1e20',
+      foreground: 'rgba(255,255,255,.85)',
+      secondary: '#a1a1a6',
+      bright: '#ffffff',
+      border: '#48484a',
+      divider: 'rgba(255,255,255,.1)',
+      fill: 'rgba(255,255,255,.06)',
+      accent: '#0072e1',
+      onAccent: '#ffffff',
+      highlight: '#ff9f0a',
+      onHighlight: '#1c1c1e',
+      danger: '#ff453a',
+      success: '#30d158',
+      warning: '#ff9f0a',
+      hatch: 'rgba(255,255,255,.17)',
+      hover: 'rgba(255,255,255,.6)',
+      label: '#ffffff',
+      labelDim: 'rgba(255,255,255,.55)',
+      marked: { fill: '#751712', outline: '#ff453a', text: '#ffb3ad' },
+      meterTrack: 'rgba(255,255,255,.09)',
+      meterUsed: 'rgba(255,255,255,.32)',
+    },
+    categories: {
+      code: { accent: '#0a84ff', fills: ['#163863', '#1e406c', '#264875', '#2e517e', '#365987'] },
+      agent: { accent: '#bf5af2', fills: ['#472957', '#4f3160', '#573968', '#604171', '#68497a'] },
+      toolchain: { accent: '#30d158', fills: ['#12431b', '#1b4b23', '#24542b', '#2c5c33', '#35653b'] },
+      synced: { accent: '#40c8e0', fills: ['#00404a', '#004853', '#00515d', '#005a68', '#006372'] },
+      git: { accent: '#f93886', fills: ['#5a2234', '#632a3c', '#6c3244', '#753a4c', '#7e4254'] },
+      media: { accent: '#5e5ce6', fills: ['#2f3263', '#363a6c', '#3e4275', '#454a7e', '#4d5387'] },
+      documents: { accent: '#98989d', fills: ['#33393e', '#3b4046', '#43484e', '#4b5056', '#53595f'] },
+      cache: { accent: '#ffd60a', fills: ['#433700', '#4b3f0a', '#544714', '#5c4f1d', '#645726'] },
+      other: { accent: '#636366', fills: ['#36383a', '#3e4042', '#46484a', '#4e5052', '#56585a'] },
+    },
+    age: {
+      swatches: ['#3386e9', '#588ed4', '#7195c3', '#889ab1', '#9e9e9e'],
+      fills: [
+        ['#0e3f78', '#184781', '#21508b', '#295894', '#32619d'],
+        ['#1f3e67', '#264670', '#2e4f79', '#365782', '#3f608b'],
+        ['#2a3d56', '#31455e', '#394d67', '#41556f', '#495e78'],
+        ['#313b47', '#39424f', '#414a57', '#495360', '#515b68'],
+        ['#383838', '#3f3f3f', '#474747', '#505050', '#585858'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'graphite',
+  name: 'Graphite',
+  family: 'Linear / Vercel',
+  pitch:
+    'Monochrome precision in the Linear and Vercel manner: cool greys stepped by lightness, each kind marked by a small coloured dot. Indigo runs the controls and one amber carries selection and every reclaim figure.',
+  flavours: { light: 'Light', dark: 'Dark' },
+  shape: { tileRadius: 3, gapTop: 4, gapDeep: 1, strip: 'dot', stripWidth: 6, sheen: 0, vibrancy: false, windowRadius: 10 },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#dcdde2,#ebeaef)',
+      background: '#fafafa',
+      surface: '#ffffff',
+      sidebar: '#ffffff',
+      inset: '#f4f4f5',
+      foreground: '#27272a',
+      secondary: '#66686f',
+      bright: '#09090b',
+      border: '#e4e4e7',
+      divider: '#ececef',
+      fill: '#f0f0f2',
+      accent: '#5e6ad2',
+      onAccent: '#ffffff',
+      highlight: '#f09c17',
+      onHighlight: '#1a1710',
+      danger: '#e5484d',
+      success: '#30a46c',
+      warning: '#f09c17',
+      hatch: 'rgba(0,0,0,.14)',
+      hover: 'rgba(0,0,0,.5)',
+      label: '#1c1c1f',
+      labelDim: 'rgba(28,28,31,.56)',
+      marked: { fill: '#ffd1cd', outline: '#e5484d', text: '#b0262b' },
+      meterTrack: '#e9e9ec',
+      meterUsed: '#a1a1aa',
+    },
+    categories: {
+      code: { accent: '#5381c4', fills: ['#e8edf6', '#dfe5ed', '#d7dde5', '#cfd5dd', '#c7cdd5'] },
+      agent: { accent: '#9673be', fills: ['#efebf4', '#e6e3ec', '#dedae3', '#d6d2db', '#cecad3'] },
+      toolchain: { accent: '#418d55', fills: ['#e7efe8', '#dfe7e0', '#d7dfd8', '#cfd7d0', '#c6cfc8'] },
+      synced: { accent: '#0095a1', fills: ['#e3f0f1', '#dbe7e9', '#d3dfe0', '#cbd7d8', '#c3cfd0'] },
+      git: { accent: '#b86487', fills: ['#f5e9ed', '#ece1e5', '#e4d9dd', '#dcd1d4', '#d4c9cc'] },
+      media: { accent: '#ae662f', fills: ['#f4ebe5', '#ece2dd', '#e4dad4', '#dbd2cc', '#d3cac4'] },
+      documents: { accent: '#737477', fills: ['#ebedef', '#e3e5e7', '#dbdcdf', '#d3d4d7', '#cbcccf'] },
+      cache: { accent: '#7f7228', fills: ['#efede3', '#e6e5db', '#deddd3', '#d6d5cb', '#ceccc3'] },
+      other: { accent: '#a3a5a7', fills: ['#ededed', '#e4e4e4', '#dcdcdc', '#d4d4d4', '#cccccc'] },
+    },
+    age: {
+      swatches: ['#5964cd', '#6874bb', '#7780ae', '#868ba2', '#959595'],
+      fills: [
+        ['#d4dcff', '#cad3ff', '#bfcbff', '#b7c2f7', '#afbaef'],
+        ['#d9e0ff', '#cfd7ff', '#c7cff6', '#bfc7ee', '#b7bfe6'],
+        ['#dee4fe', '#d6dcf5', '#ced4ed', '#c6cce5', '#bec4dc'],
+        ['#e6e9f6', '#dde0ed', '#d5d8e5', '#cdd0dd', '#c5c8d5'],
+        ['#ededed', '#e5e5e5', '#dddddd', '#d4d4d4', '#cccccc'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#1b1b1f,#24242a)',
+      background: '#151518',
+      surface: '#1b1b1f',
+      sidebar: '#1b1b1f',
+      inset: '#0f0f12',
+      foreground: '#d4d4d8',
+      secondary: '#8f9098',
+      bright: '#f4f4f5',
+      border: '#2c2c33',
+      divider: '#26262c',
+      fill: '#232329',
+      accent: '#5e6ad2',
+      onAccent: '#ffffff',
+      highlight: '#fcaa2b',
+      onHighlight: '#141414',
+      danger: '#f2555a',
+      success: '#3dd68c',
+      warning: '#fcaa2b',
+      hatch: 'rgba(255,255,255,.15)',
+      hover: 'rgba(255,255,255,.55)',
+      label: '#ececee',
+      labelDim: 'rgba(236,236,238,.58)',
+      marked: { fill: '#501817', outline: '#f2555a', text: '#ffb0b3' },
+      meterTrack: '#26262c',
+      meterUsed: '#6b6b74',
+    },
+    categories: {
+      code: { accent: '#77a6ec', fills: ['#25292f', '#2c3137', '#34383f', '#3c4047', '#43484f'] },
+      agent: { accent: '#bc98e5', fills: ['#2a272e', '#322f36', '#39363d', '#413e45', '#49464d'] },
+      toolchain: { accent: '#66b278', fills: ['#242b25', '#2c322d', '#333a34', '#3b423c', '#434a44'] },
+      synced: { accent: '#2fbcca', fills: ['#222b2c', '#293233', '#303a3b', '#384243', '#404a4b'] },
+      git: { accent: '#e088ab', fills: ['#2e2629', '#362e31', '#3e3538', '#463d40', '#4e4548'] },
+      media: { accent: '#d58a55', fills: ['#2e2723', '#362f2a', '#3e3632', '#453e39', '#4d4641'] },
+      documents: { accent: '#909295', fills: ['#28292b', '#2f3032', '#37383a', '#3e4042', '#46484a'] },
+      cache: { accent: '#a3974e', fills: ['#2a2922', '#323129', '#393831', '#414038', '#494840'] },
+      other: { accent: '#626366', fills: ['#292929', '#303030', '#383838', '#404040', '#484848'] },
+    },
+    age: {
+      swatches: ['#8393ff', '#8e9ce6', '#98a2d1', '#a1a6be', '#ababab'],
+      fills: [
+        ['#242953', '#2b315b', '#323964', '#3a416d', '#414976'],
+        ['#252a48', '#2c3250', '#343959', '#3b4161', '#43496a'],
+        ['#262a3d', '#2e3245', '#35394d', '#3d4155', '#45495e'],
+        ['#282a33', '#2f313b', '#363943', '#3e414b', '#464953'],
+        ['#292929', '#303030', '#383838', '#404040', '#484848'],
+      ],
+    },
+  },
+});
+
+window.PALETTES.push({
+  id: 'rose-pine',
+  name: 'Rosé Pine',
+  family: 'Rosé Pine',
+  pitch:
+    'The soft cousin of Catppuccin: the official Dawn and Moon palettes on a violet-grey base, with the six Rosé Pine accents and three quiet derived hues for the legend. Gold marks selection and savings, love marks removal.',
+  flavours: { light: 'Dawn', dark: 'Moon' },
+  shape: { tileRadius: 4, gapTop: 5, gapDeep: 2, strip: 'left', stripWidth: 3, sheen: 0.03, vibrancy: false, windowRadius: 10 },
+  light: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#e6dcd4,#f2e9e1)',
+      background: '#faf4ed',
+      surface: '#fffaf3',
+      sidebar: '#fffaf3',
+      inset: '#f4ede8',
+      foreground: '#575279',
+      secondary: '#696587',
+      bright: '#4a4568',
+      border: '#dfdad9',
+      divider: '#f2e9e1',
+      fill: '#f4ede8',
+      accent: '#816b99',
+      onAccent: '#ffffff',
+      highlight: '#ea9d34',
+      onHighlight: '#2a2740',
+      danger: '#b5446a',
+      success: '#4a925c',
+      warning: '#ea9d34',
+      hatch: 'rgba(87,82,121,.2)',
+      hover: 'rgba(87,82,121,.55)',
+      label: '#4a4568',
+      labelDim: 'rgba(74,69,104,.75)',
+      marked: { fill: '#ffc6d3', outline: '#b5446a', text: '#9a4a63' },
+      meterTrack: '#dfdad9',
+      meterUsed: '#9893a5',
+    },
+    categories: {
+      code: { accent: '#286983', fills: ['#d3f1ff', '#c9eaf9', '#c2e3f2', '#bbdbeb', '#b4d4e3'] },
+      agent: { accent: '#907aa9', fills: ['#f1e6ff', '#eadefa', '#e3d6f2', '#dccfeb', '#d5c8e4'] },
+      toolchain: { accent: '#649665', fills: ['#dbf3db', '#d4ebd4', '#cde4cd', '#c6ddc6', '#bfd6bf'] },
+      synced: { accent: '#56949f', fills: ['#cef3fa', '#c6ecf3', '#bfe5eb', '#b8dde4', '#b1d6dd'] },
+      git: { accent: '#d7827e', fills: ['#ffe4e2', '#fedad8', '#f6d3d0', '#efccc9', '#e8c5c2'] },
+      media: { accent: '#616cac', fills: ['#e5eaff', '#dce2ff', '#d5dbf8', '#cdd4f1', '#c6cde9'] },
+      documents: { accent: '#717078', fills: ['#ebeaf3', '#e4e3ec', '#dcdbe4', '#d5d4dd', '#cecdd6'] },
+      cache: { accent: '#987a59', fills: ['#ffe7cc', '#f8dfc4', '#f1d8bd', '#e9d1b6', '#e2caaf'] },
+      other: { accent: '#9893a5', fills: ['#eceaf0', '#e4e3e9', '#dddce1', '#d6d4da', '#cfcdd3'] },
+    },
+    age: {
+      swatches: ['#926cb9', '#9378b2', '#9583aa', '#968ea1', '#99979c'],
+      fills: [
+        ['#e5d0ff', '#e0c6ff', '#dabff9', '#d3b8f2', '#ccb1ea'],
+        ['#e8d5ff', '#e2cdfb', '#dbc6f3', '#d4bfec', '#ccb8e4'],
+        ['#eadcfc', '#e3d5f4', '#dcceed', '#d4c7e6', '#cdbfde'],
+        ['#ebe3f5', '#e4dcee', '#dcd5e6', '#d5cedf', '#cec7d8'],
+        ['#eceaf0', '#e5e3e8', '#dedbe1', '#d7d4da', '#d0cdd3'],
+      ],
+    },
+  },
+  dark: {
+    ui: {
+      desktop: 'linear-gradient(135deg,#191724,#2a273f)',
+      background: '#232136',
+      surface: '#2a273f',
+      sidebar: '#2a273f',
+      inset: '#1f1d2e',
+      foreground: '#e0def4',
+      secondary: '#9995b3',
+      bright: '#e0def4',
+      border: '#44415a',
+      divider: '#393552',
+      fill: '#2a283e',
+      accent: '#c4a7e7',
+      onAccent: '#232136',
+      highlight: '#f6c177',
+      onHighlight: '#232136',
+      danger: '#e75985',
+      success: '#7ccd8e',
+      warning: '#f6c177',
+      hatch: 'rgba(224,222,244,.16)',
+      hover: 'rgba(224,222,244,.6)',
+      label: '#e0def4',
+      labelDim: 'rgba(224,222,244,.6)',
+      marked: { fill: '#6f1b38', outline: '#e75985', text: '#f7b3c6' },
+      meterTrack: '#44415a',
+      meterUsed: '#908caa',
+    },
+    categories: {
+      code: { accent: '#3e8fb0', fills: ['#1c3d4a', '#244453', '#2c4d5b', '#345563', '#3d5d6c'] },
+      agent: { accent: '#c4a7e7', fills: ['#3d324b', '#453a53', '#4d425b', '#554a64', '#5e526d'] },
+      toolchain: { accent: '#7fb880', fills: ['#293e29', '#314631', '#384e39', '#405740', '#485f49'] },
+      synced: { accent: '#9ccfd8', fills: ['#173e45', '#20464d', '#284e55', '#30575d', '#395f66'] },
+      git: { accent: '#ea9a97', fills: ['#4d2e2d', '#553635', '#5e3e3d', '#664645', '#6f4e4d'] },
+      media: { accent: '#808dcf', fills: ['#31364f', '#393e58', '#404660', '#484e69', '#505672'] },
+      documents: { accent: '#b1b0b8', fills: ['#38373e', '#403f46', '#47474e', '#504f56', '#58575e'] },
+      cache: { accent: '#b19a7c', fills: ['#46341c', '#4e3c24', '#56442c', '#5f4c34', '#67553c'] },
+      other: { accent: '#6e6a86', fills: ['#38373c', '#403f44', '#48474c', '#504f54', '#58575c'] },
+    },
+    age: {
+      swatches: ['#c9a3f5', '#bea3df', '#b3a2ca', '#a9a0b4', '#9f9da2'],
+      fills: [
+        ['#4a3363', '#523b6c', '#5b4375', '#634b7e', '#6c5387'],
+        ['#463459', '#4e3c62', '#56446a', '#5e4d73', '#67557c'],
+        ['#41364f', '#493e57', '#514660', '#5a4e68', '#625671'],
+        ['#3d3744', '#453e4d', '#4d4655', '#554e5d', '#5d5766'],
+        ['#39373b', '#413f43', '#48474b', '#514f53', '#59575c'],
+      ],
+    },
+  },
+});
+
+</script>
+<script>
+// ---- renderer.js
+// Disktree mock renderer: paints the explore and review screens with a
+// palette's resolved colours. Plain script, no dependencies.
+//
+//   window.DisktreeMock.renderExplore(el, palette, 'light'|'dark', {mode:'kind'|'age'})
+//   window.DisktreeMock.renderReview(el, palette, appearance)
+//   window.DisktreeMock.renderTreemapOnly(el, palette, appearance, {mode})
+//
+// Everything renders at a fixed design size and is scaled to the container
+// width with a transform, so it reads like a screenshot at any width.
+(function () {
+  'use strict';
+
+  var WIN_W = 1240, WIN_H = 780, PAD = 40;
+  var TITLE_H = 38, KEYBAR_H = 32, STATS_H = 32, SIDE_W = 368;
+  var CANVAS_W = WIN_W - SIDE_W - 32;
+  var CANVAS_H = WIN_H - TITLE_H - KEYBAR_H - STATS_H - 8;
+  var MINI_W = 640, MINI_H = 400;
+
+  var CATS = ['code', 'agent', 'toolchain', 'synced', 'git', 'media', 'documents', 'cache'];
+  var CAT_LABELS = ['Code', 'Agent scratch', 'Toolchains', 'Synced', 'Git', 'Media', 'Documents', 'Cache'];
+  var AGE_LABELS = ['This week', 'This month', 'Six months', 'This year', 'Older'];
+
+  // ---- sample tree -------------------------------------------------------
+  // d(name, kind, opts, children | bytesInGiB). opts: r = reclaim reason,
+  // a = age bucket, u = unreadable, m = marked, own = bytes not in children.
+  function d(name, kind, opts, kids) {
+    var n = { name: name, kind: kind, r: opts.r || null, age: opts.a, u: !!opts.u, m: !!opts.m, own: opts.own || 0 };
+    if (Array.isArray(kids)) { n.children = kids; } else { n.own = kids; }
+    return n;
+  }
+  function aggregate(n, age) {
+    if (n.age === undefined) n.age = age === undefined ? 4 : age;
+    var total = n.own;
+    if (n.children) {
+      n.children.forEach(function (c) { total += aggregate(c, n.age); });
+      n.children.sort(function (a, b) { return b.bytes - a.bytes; });
+    }
+    n.bytes = total;
+    return total;
+  }
+  var TREE = d('arif', 'other', { a: 0 }, [
+    d('Library', 'other', { a: 0 }, [
+      d('Caches', 'cache', { r: 'regenerable', a: 0, own: 1.6 }, [
+        d('Homebrew', 'cache', { r: 'regenerable' }, 12.4),
+        d('com.apple.dt.Xcode', 'cache', { r: 'regenerable' }, 8.1),
+        d('ms-playwright', 'cache', { r: 'regenerable' }, 4.9),
+        d('JetBrains', 'cache', { r: 'regenerable', a: 1 }, 3.6),
+        d('pip', 'cache', { r: 'regenerable', a: 1 }, 3.2),
+        d('Google', 'cache', { r: 'regenerable' }, 2.5),
+        d('com.spotify.client', 'cache', { r: 'regenerable' }, 1.9),
+      ]),
+      d('Developer', 'other', { a: 1 }, [
+        d('CoreSimulator', 'toolchain', { r: 'sandbox layers', a: 1 }, [
+          d('Devices', 'toolchain', { r: 'sandbox layers', m: true }, 18.9),
+          d('Caches', 'cache', { r: 'regenerable' }, 9.5),
+        ]),
+        d('Xcode', 'code', { a: 1 }, [
+          d('DerivedData', 'code', { r: 'build output' }, 11.2),
+          d('iOS DeviceSupport', 'toolchain', { a: 2 }, 2.4),
+        ]),
+      ]),
+      d('Application Support', 'other', { a: 1 }, [
+        d('MobileSync', 'documents', { a: 3 }, 5.8),
+        d('Code', 'other', {}, 5.5),
+        d('Google', 'other', {}, 4.1),
+        d('Slack', 'other', {}, 3.2),
+      ]),
+      d('Containers', 'other', { a: 2, own: 1.4 }, [
+        d('com.apple.mail', 'other', { u: true }, 6.2),
+        d('com.docker.docker', 'other', {}, 5.1),
+        d('com.apple.Safari', 'other', {}, 2.1),
+      ]),
+      d('Mobile Documents', 'synced', { a: 0 }, [
+        d('com~apple~CloudDocs', 'synced', {}, 7.2),
+        d('iCloud~md~obsidian', 'synced', {}, 2.6),
+      ]),
+      d('CloudStorage', 'synced', { a: 2 }, [
+        d('GoogleDrive-arif', 'synced', {}, 6.4),
+      ]),
+      d('Group Containers', 'other', { a: 2 }, 2.5),
+      d('Logs', 'cache', { r: 'regenerable', a: 0 }, 2.1),
+    ]),
+    d('projects', 'code', { a: 0 }, [
+      d('atlas', 'code', { a: 0 }, [
+        d('target', 'cache', { r: 'build output', m: true }, 9.7),
+        d('.git', 'git', {}, 3.4),
+        d('node_modules', 'cache', { r: 'package store' }, 2.1),
+        d('src', 'code', {}, 1.2),
+        d('docs', 'code', {}, 0.4),
+      ]),
+      d('github.com', 'code', { a: 2 }, [
+        d('omatrack', 'code', {}, [
+          d('target', 'cache', { r: 'build output' }, 2.2),
+          d('.git', 'git', {}, 1.8),
+          d('node_modules', 'cache', { r: 'package store' }, 1.4),
+          d('src', 'code', {}, 0.7),
+        ]),
+        d('helix', 'code', {}, [
+          d('target', 'cache', { r: 'build output' }, 2.8),
+          d('.git', 'git', {}, 1.6),
+        ]),
+        d('ghostty', 'code', {}, [
+          d('.git', 'git', {}, 2.9),
+          d('src', 'code', {}, 1.4),
+        ]),
+      ]),
+      d('zed', 'code', { a: 1 }, [
+        d('target', 'cache', { r: 'build output' }, 4.6),
+        d('.git', 'git', {}, 3.1),
+        d('crates', 'code', {}, 1.9),
+      ]),
+      d('disktree', 'code', { a: 0 }, [
+        d('target', 'cache', { r: 'build output' }, 5.2),
+        d('.git', 'git', {}, 0.9),
+        d('src', 'code', {}, 0.7),
+      ]),
+      d('experiments', 'agent', { a: 1 }, [
+        d('llm-eval', 'agent', {}, 2.8),
+        d('wgpu-toy', 'agent', {}, 1.5),
+        d('notes', 'agent', {}, 0.9),
+      ]),
+      d('ledger', 'code', { a: 3 }, [
+        d('.git', 'git', {}, 2.0),
+        d('node_modules', 'cache', { r: 'package store' }, 1.9),
+        d('src', 'code', {}, 1.0),
+      ]),
+      d('scratch', 'agent', { a: 0 }, 4.1),
+    ]),
+    d('Pictures', 'media', { a: 3 }, [
+      d('Photos Library.photoslibrary', 'media', {}, 48.7),
+      d('Lightroom', 'media', { a: 2 }, 4.6),
+      d('Screenshots', 'media', { a: 0 }, 3.3),
+    ]),
+    d('Movies', 'media', { a: 4 }, [
+      d('iMovie Library.imovielibrary', 'media', {}, 18.2),
+      d('footage', 'media', {}, 15.4),
+      d('exports', 'media', { a: 3 }, 2.0),
+    ]),
+    d('.ollama', 'media', { a: 0 }, [
+      d('models', 'media', {}, [
+        d('blobs', 'media', {}, 22.6),
+        d('manifests', 'media', {}, 0.2),
+      ]),
+    ]),
+    d('Downloads', 'documents', { a: 0, own: 4.1 }, [
+      d('installers', 'documents', { a: 1 }, 8.1),
+      d('archives', 'documents', { a: 2 }, 6.2),
+    ]),
+    d('Documents', 'documents', { a: 3 }, [
+      d('Books', 'documents', {}, 5.1),
+      d('Scans', 'documents', {}, 3.5),
+      d('Papers', 'documents', { a: 1 }, 3.2),
+      d('Invoices', 'documents', { a: 0 }, 2.4),
+    ]),
+    d('Dropbox', 'synced', { r: 'sync history', a: 2 }, [
+      d('Camera Uploads', 'synced', {}, 7.4),
+      d('Shared', 'synced', { a: 1 }, 3.1),
+      d('.dropbox.cache', 'cache', { r: 'regenerable' }, 2.1),
+    ]),
+    d('.cargo', 'toolchain', { r: 'reinstallable', a: 1 }, [
+      d('registry', 'toolchain', { r: 'reinstallable' }, 8.6),
+      d('git', 'toolchain', { r: 'reinstallable' }, 3.2),
+    ]),
+    d('.claude', 'agent', { a: 0 }, [
+      d('worktrees', 'agent', { r: 'temporary' }, [
+        d('atlas-fix', 'agent', {}, 2.6),
+        d('atlas-perf', 'agent', {}, 2.1),
+        d('ledger-ci', 'agent', { a: 1 }, 1.5),
+      ]),
+      d('projects', 'agent', {}, 2.1),
+      d('cache', 'cache', { r: 'regenerable' }, 1.1),
+    ]),
+    d('.rustup', 'toolchain', { r: 'reinstallable', a: 1 }, [
+      d('toolchains', 'toolchain', { r: 'reinstallable' }, 8.9),
+    ]),
+    d('.cache', 'cache', { r: 'regenerable', a: 1 }, [
+      d('huggingface', 'cache', { r: 'regenerable' }, 3.9),
+      d('pip', 'cache', { r: 'regenerable' }, 1.4),
+      d('yarn', 'cache', { r: 'regenerable' }, 1.4),
+    ]),
+    d('Music', 'media', { a: 4 }, [
+      d('Media', 'media', {}, 4.8),
+      d('Music Library.musiclibrary', 'media', {}, 0.8),
+    ]),
+    d('.Trash', 'cache', { r: 'trash', a: 0 }, 4.2),
+    d('Desktop', 'documents', { a: 0 }, 3.2),
+    d('.npm', 'toolchain', { r: 'package store', a: 1 }, [
+      d('_cacache', 'toolchain', { r: 'package store' }, 3.1),
+    ]),
+    d('Applications', 'toolchain', { a: 2 }, 2.6),
+  ]);
+  aggregate(TREE, 0);
+  // Which tiles carry the selection ring and the hover outline.
+  var SELECTED = 'Library/Caches', HOVER = '.ollama/models';
+
+  // ---- helpers -----------------------------------------------------------
+  function fmtSize(g) {
+    if (g >= 1) return (g >= 10 ? g.toFixed(0) : g.toFixed(1)) + 'GiB';
+    var m = g * 1024;
+    return (m >= 10 ? m.toFixed(0) : m.toFixed(1)) + 'MiB';
+  }
+  function fmtLong(g) { return g.toFixed(1) + ' GiB'; }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function mix(c, pct) { return 'color-mix(in srgb, ' + c + ' ' + pct + '%, transparent)'; }
+  function px(n) { return Math.round(n * 100) / 100 + 'px'; }
+
+  // Squarified layout (Bruls, Huizing, van Wijk). Items must be sorted
+  // descending by v; returns rects in the same order.
+  function squarify(items, rect) {
+    var out = new Array(items.length);
+    var total = 0;
+    items.forEach(function (it) { total += it.v; });
+    if (total <= 0 || rect.w <= 0 || rect.h <= 0) return out;
+    var scale = (rect.w * rect.h) / total;
+    var x = rect.x, y = rect.y, w = rect.w, h = rect.h;
+    var i = 0, n = items.length;
+    function worst(sum, mx, mn, side) {
+      var s2 = sum * sum, d2 = side * side;
+      return Math.max((d2 * mx) / s2, s2 / (d2 * mn));
+    }
+    while (i < n) {
+      var side = Math.min(w, h);
+      var start = i, sum = 0, mx = 0, mn = Infinity;
+      while (i < n) {
+        var a = items[i].v * scale;
+        if (a <= 0) { out[i] = { x: x, y: y, w: 0, h: 0 }; i++; continue; }
+        var nsum = sum + a, nmx = Math.max(mx, a), nmn = Math.min(mn, a);
+        if (i === start || worst(nsum, nmx, nmn, side) <= worst(sum, mx, mn, side)) {
+          sum = nsum; mx = nmx; mn = nmn; i++;
+        } else break;
+      }
+      if (sum <= 0) continue;
+      if (w >= h) {
+        var cw = sum / h, cy = y;
+        for (var k = start; k < i; k++) {
+          var ih = (items[k].v * scale) / cw;
+          if (out[k] === undefined) out[k] = { x: x, y: cy, w: cw, h: ih };
+          cy += ih;
+        }
+        x += cw; w -= cw;
+      } else {
+        var rh = sum / w, cx = x;
+        for (var j = start; j < i; j++) {
+          var iw = (items[j].v * scale) / rh;
+          if (out[j] === undefined) out[j] = { x: cx, y: y, w: iw, h: rh };
+          cx += iw;
+        }
+        y += rh; h -= rh;
+      }
+    }
+    return out;
+  }
+
+  // ---- treemap painting --------------------------------------------------
+  function paintTiles(node, cell, depth, ctx, path, inheritMarked) {
+    var gap = depth === 0 ? ctx.shape.gapTop : ctx.shape.gapDeep;
+    var x = cell.x + gap / 2, y = cell.y + gap / 2, w = cell.w - gap, h = cell.h - gap;
+    if (w < 5 || h < 5) return '';
+    var ui = ctx.ui, cat = ctx.cats[node.kind] || ctx.cats.other;
+    var marked = inheritMarked || node.m;
+    var fill = marked ? ui.marked.fill
+      : ctx.mode === 'age' ? (ctx.age.fills[node.age] || ctx.age.fills[4])[depth]
+      : cat.fills[Math.min(depth, cat.fills.length - 1)];
+    var open = !!node.children && depth < 2 && w >= 44 && h >= (depth === 0 ? 30 : 24);
+    var band = depth === 0 ? 22 : 16;
+    var labelColor = marked ? ui.marked.text : (cat.text || ui.label);
+    var sw = ctx.shape.stripWidth || 0;
+    var strip = depth === 0 && !marked && ctx.mode !== 'age' ? ctx.shape.strip : 'none';
+
+    var s = '<div class="dt-tile" style="left:' + px(x) + ';top:' + px(y) + ';width:' + px(w) + ';height:' + px(h) +
+      ';background:' + fill + ';border-radius:' + ctx.shape.tileRadius + 'px">';
+    if (ctx.shape.sheen > 0) {
+      s += '<div class="dt-ov" style="background:linear-gradient(to bottom,rgba(255,255,255,' + ctx.shape.sheen + '),rgba(255,255,255,0))"></div>';
+    }
+    if (node.r && !marked) {
+      s += '<div class="dt-ov" style="background:repeating-linear-gradient(45deg,' + ui.hatch + ' 0 1px,transparent 1px 6px)"></div>';
+    }
+    var labelLeft = 5, labelTop = 3;
+    if (strip === 'top') {
+      s += '<div class="dt-ov" style="height:' + sw + 'px;background:' + cat.accent + '"></div>';
+      labelTop += sw > 2 ? sw - 2 : 0;
+    } else if (strip === 'left') {
+      s += '<div class="dt-ov" style="width:' + sw + 'px;background:' + cat.accent + '"></div>';
+      labelLeft += sw;
+    } else if (strip === 'dot') {
+      var dy = (open ? band : 18) / 2 - sw / 2;
+      s += '<div class="dt-ov" style="left:5px;top:' + px(dy) + ';width:' + sw + 'px;height:' + sw + 'px;border-radius:50%;background:' + cat.accent + '"></div>';
+      labelLeft += sw + 4;
+    }
+    // Labels.
+    if (w >= 40 && h >= 12) {
+      var nameStyle = 'color:' + labelColor + (depth > 0 && !marked ? ';opacity:.88' : '') + (depth === 0 ? ';font-weight:700' : '');
+      var size = '<span class="dt-size" style="color:' + ui.labelDim + '">' + fmtSize(node.bytes) + '</span>';
+      if (open && depth === 0) {
+        s += '<div class="dt-lbl" style="left:' + labelLeft + 'px;right:5px;top:' + labelTop + 'px;display:flex;justify-content:space-between;gap:8px">' +
+          '<span class="dt-name" style="' + nameStyle + '">' + esc(node.name) + '</span>' + size + '</div>';
+      } else if (open) {
+        s += '<div class="dt-lbl" style="left:' + labelLeft + 'px;right:5px;top:' + (labelTop - 2) + 'px;display:flex;gap:8px">' +
+          '<span class="dt-name" style="' + nameStyle + '">' + esc(node.name) + '</span>' + size + '</div>';
+      } else {
+        s += '<div class="dt-lbl" style="left:' + labelLeft + 'px;right:5px;top:' + labelTop + 'px">' +
+          '<span class="dt-name" style="' + nameStyle + '">' + esc(node.name) + '</span>' +
+          (h >= 30 ? '<br>' + size : '') + '</div>';
+      }
+    }
+    if (open) {
+      var inner = { x: 0, y: band, w: w, h: h - band };
+      var kids = node.children.filter(function (c) { return c.bytes > 0; });
+      var rects = squarify(kids.map(function (c) { return { v: c.bytes }; }), inner);
+      for (var i = 0; i < kids.length; i++) {
+        if (rects[i]) s += paintTiles(kids[i], rects[i], depth + 1, ctx, path + '/' + kids[i].name, marked);
+      }
+    }
+    if (node.u) {
+      s += '<div class="dt-ov" style="left:auto;right:2px;top:2px;width:4px;height:4px;background:' + ui.warning + '"></div>';
+    }
+    var ring = marked ? 'inset 0 0 0 2px ' + ui.marked.outline
+      : path === SELECTED ? 'inset 0 0 0 2px ' + ui.highlight
+      : path === HOVER ? 'inset 0 0 0 1px ' + ui.hover : '';
+    if (ring) s += '<div class="dt-ov dt-ring" style="box-shadow:' + ring + ';border-radius:' + ctx.shape.tileRadius + 'px"></div>';
+    return s + '</div>';
+  }
+
+  function treemapHTML(ctx, w, h) {
+    var kids = TREE.children;
+    var rects = squarify(kids.map(function (c) { return { v: c.bytes }; }), { x: 0, y: 0, w: w, h: h });
+    var s = '';
+    for (var i = 0; i < kids.length; i++) {
+      if (rects[i]) s += paintTiles(kids[i], rects[i], 0, ctx, kids[i].name, false);
+    }
+    return s;
+  }
+
+  function legendHTML(ctx) {
+    var s = '<div class="dt-legend">';
+    if (ctx.mode === 'age') {
+      AGE_LABELS.forEach(function (l, i) {
+        s += '<span class="dt-lg"><i style="background:' + ctx.age.swatches[i] + '"></i>' + l + '</span>';
+      });
+    } else {
+      s += '<span class="dt-lg"><i style="background:' + ctx.cats.other.fills[0] +
+        ';background-image:repeating-linear-gradient(45deg,' + ctx.ui.hatch + ' 0 1px,transparent 1px 3px)"></i>Reclaimable</span>';
+      CATS.forEach(function (k, i) {
+        s += '<span class="dt-lg"><i style="background:' + ctx.cats[k].accent + '"></i>' + CAT_LABELS[i] + '</span>';
+      });
+    }
+    return s + '</div>';
+  }
+
+  // ---- chrome pieces -----------------------------------------------------
+  function lights() {
+    return '<div class="dt-lights"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>';
+  }
+  function logo(ctx) {
+    var c = ctx.cats;
+    return '<div class="dt-logo"><div class="dt-logo-grid">' +
+      '<i style="background:' + c.code.accent + '"></i><i style="background:' + c.agent.accent + '"></i>' +
+      '<i style="background:' + c.synced.accent + '"></i><i style="background:' + c.toolchain.accent + '"></i>' +
+      '</div><span>disktree</span></div>';
+  }
+  function crumbs() {
+    var parts = ['Macintosh HD', 'Users', 'arif', 'Library'];
+    return '<div class="dt-crumbs">' + parts.map(function (p, i) {
+      return (i ? '<span class="dt-sep">/</span>' : '') +
+        '<span class="dt-crumb' + (i === parts.length - 1 ? ' is-current' : '') + '">' + p + '<b>&#9662;</b></span>';
+    }).join('') + '</div>';
+  }
+  function segmented(items, chosen, cls) {
+    return '<div class="dt-seg ' + (cls || '') + '">' + items.map(function (t) {
+      return '<span class="' + (t === chosen ? 'is-on' : '') + '">' + t + '</span>';
+    }).join('') + '</div>';
+  }
+  function checkbox(label, on) {
+    return '<label class="dt-check"><i class="' + (on ? 'is-on' : '') + '">' +
+      (on ? '<svg viewBox="0 0 16 16" width="16" height="16"><path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '') +
+      '</i>' + label + '</label>';
+  }
+  function keycap(k) { return '<kbd class="dt-key">' + k + '</kbd>'; }
+  function hint(k, l) { return '<span class="dt-hint">' + keycap(k) + '<span>' + l + '</span></span>'; }
+  function eyebrow(t, right) {
+    return '<div class="dt-eyebrow"><span>' + t + '</span>' + (right ? '<span class="dt-eyebrow-r">' + right + '</span>' : '') + '</div>';
+  }
+
+  function sidePanel(ctx) {
+    var c = ctx.cats, ui = ctx.ui;
+    var looks = [
+      ['cache', 'Caches/Homebrew', 'regenerable', 12.4],
+      ['toolchain', 'Developer/CoreSimulator', 'sandbox layers', 18.9],
+      ['cache', 'projects/atlas/target', 'build output', 9.7],
+      ['agent', '.claude/worktrees', '3 worktrees · oldest 41 d', 6.2],
+      ['cache', 'node_modules (×14)', 'package store', 4.8],
+    ];
+    var s = '<aside class="dt-side">';
+    // SELECTION
+    s += '<section class="dt-sec">' + eyebrow('Selection') +
+      '<div class="dt-selname"><i style="background:' + c.cache.accent + '"></i><div><div class="dt-selh">Caches</div><div class="dt-selp">~/Library/Caches</div></div></div>' +
+      '<div class="dt-big"><span>38.2</span><small>GiB</small></div>' +
+      '<div class="dt-meter dt-meter5"><i style="width:9.3%;background:' + ui.highlight + '"></i></div>' +
+      '<div class="dt-figs">' +
+      '<div><em>Of scan</em><b>9.3%</b></div><div><em>Files</em><b>184.2k</b></div>' +
+      '<div><em>Last write</em><b>3 days ago</b></div><div><em>Kind</em><b>Cache · regenerable</b></div>' +
+      '</div>' +
+      '<div class="dt-btns"><span class="dt-btn">Open</span><span class="dt-btn dt-btn-hl">Mark for removal</span></div>' +
+      '</section>';
+    // WORTH A LOOK
+    s += '<section class="dt-sec dt-look">' + eyebrow('Worth a look', '<b class="dt-hl">61.4 GiB</b>') + '<div class="dt-rows">';
+    looks.forEach(function (r) {
+      var acc = c[r[0]].accent;
+      s += '<div class="dt-row"><i style="background:' + acc + '"></i><div class="dt-rowt"><div class="dt-rowname">' + esc(r[1]) +
+        '</div><div class="dt-rowdet">' + r[2] + '</div></div><div class="dt-rowr"><span>' + fmtLong(r[3]) +
+        '</span><div class="dt-meter dt-meter5"><i style="width:' + Math.round((r[3] / 18.9) * 100) + '%;background:' + acc + '"></i></div></div></div>';
+    });
+    s += '</div></section>';
+    // MARKED
+    s += '<section class="dt-sec">' + eyebrow('Marked · 2', '28.6 GiB') + '<div class="dt-marks">' +
+      '<div class="dt-mark"><i style="background:' + c.toolchain.accent + '"></i><span>~/Library/Developer/CoreSimulator/Devices</span><small>18.9 GiB</small><b>×</b></div>' +
+      '<div class="dt-mark"><i style="background:' + c.cache.accent + '"></i><span>~/projects/atlas/target</span><small>9.7 GiB</small><b>×</b></div>' +
+      '</div></section>';
+    // DISK
+    var used = 410.1 / 494.4, freed = 28.6 / 494.4;
+    s += '<section class="dt-sec dt-disk">' + eyebrow('Disk', '<span class="dt-dim60">/dev/disk3s1</span>') +
+      '<div class="dt-diskrow"><div class="dt-free"><span>84.2</span><small>GiB free</small></div><div class="dt-after">→ 112.8 GiB free</div></div>' +
+      '<div class="dt-meter dt-meter8">' +
+      '<i style="width:' + ((used - freed) * 100).toFixed(2) + '%;background:' + ui.meterUsed + '"></i>' +
+      '<i style="left:' + ((used - freed) * 100).toFixed(2) + '%;width:' + (freed * 100).toFixed(2) + '%;background:' + mix(ui.highlight, 25) +
+      ';background-image:repeating-linear-gradient(45deg,' + ui.highlight + ' 0 1px,transparent 1px 4px)"></i></div>' +
+      '<div class="dt-diskline"><span>410.1 GiB used</span><span>494.4 GiB total</span></div>' +
+      '<div class="dt-diskline dt-purge">12.3 GiB purgeable: freed by macOS on demand</div>' +
+      '<div class="dt-review"><span>Review 2 marked · frees 28.6 GiB…</span>' + keycap('c') + '</div>' +
+      '</section>';
+    return s + '</aside>';
+  }
+
+  function exploreHTML(ctx) {
+    var ui = ctx.ui;
+    var s = '<div class="dt-titlebar">' + lights() + logo(ctx) + crumbs() + '<div class="dt-spacer"></div>' +
+      segmented(['Size', 'Files', 'Age'], ctx.mode === 'age' ? 'Age' : 'Size', 'dt-seg176') +
+      checkbox('Hidden files', true) + checkbox('Apparent size', false) +
+      '<div class="dt-stepper"><span>Depth 3</span><b>−</b><b>+</b></div></div>';
+    s += '<div class="dt-body"><div class="dt-main">' +
+      '<div class="dt-stats"><div class="dt-statsl"><span style="color:' + ui.foreground + '">412.3 GiB</span> · 1.8M files · 214.6k dirs · <span style="color:' + ui.warning + '">45 not permitted</span></div>' +
+      legendHTML(ctx) + '</div>' +
+      '<div class="dt-canvas" style="width:' + CANVAS_W + 'px;height:' + CANVAS_H + 'px">' + treemapHTML(ctx, CANVAS_W, CANVAS_H) + '</div>' +
+      '</div>' + sidePanel(ctx) + '</div>';
+    s += '<div class="dt-keybar">' +
+      hint('space', 'mark') + hint('enter', 'open') + hint('⌫', 'up') + hint('c', 'review') + hint('hjkl', 'move') +
+      hint('/', 'filter') + hint('[ ]', 'depth') + hint('t', 'mode') + hint('0', 'reset') + hint('r', 'rescan') +
+      '<div class="dt-spacer"></div>' + hint('?', 'all keys') + '<span class="dt-dim70">scan 1.8M entries · 14.2 s</span></div>';
+    return s;
+  }
+
+  function reviewHTML(ctx) {
+    var ui = ctx.ui;
+    var rows = [
+      ['Devices', '~/Library/Developer/CoreSimulator', '▓▓▓▓▓░░░', '18.9 GiB'],
+      ['target', '~/projects/atlas', '▓▓░░░░░░', '9.7 GiB'],
+    ];
+    var folder = '<svg viewBox="0 0 16 16" width="12" height="12"><path d="M1.5 3.5h4l1.5 1.5h7.5v8h-13z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>';
+    var s = '<div class="dt-titlebar">' + lights() + '<span class="dt-rvtitle">Review</span><span class="dt-rvsub">2 marked · 28.6 GiB to free</span></div>';
+    s += '<div class="dt-rvbody"><div class="dt-well">';
+    rows.forEach(function (r) {
+      s += '<div class="dt-rvrow"><span class="dt-folder">' + folder + '</span><div class="dt-rowt"><div class="dt-rowname">' + r[0] +
+        '</div><div class="dt-rowdet">' + r[1] + '</div></div><span class="dt-glyph">' + r[2] + '</span><span class="dt-rvsize">' + r[3] +
+        '</span><span class="dt-btn dt-btn-sm">Unmark</span></div>';
+    });
+    s += '</div><div class="dt-summary">' +
+      '<div class="dt-sum"><h4>What happens</h4>' + segmented(['Move to Trash', 'Delete permanently'], 'Move to Trash', 'dt-segfull') +
+      '<p>Recoverable from the Finder’s Trash until it is emptied.</p></div>' +
+      '<div class="dt-sum"><h4>Totals</h4><div class="dt-tot"><span>Marked</span><b>2</b></div><div class="dt-tot"><span>Acted on</span><b>2</b></div>' +
+      '<div class="dt-tot"><span>Nested</span><b>0</b></div><div class="dt-tot"><span>Kept back</span><b>0</b></div><div class="dt-tot"><span>Space freed</span><b>28.6 GiB</b></div></div>' +
+      '<div class="dt-sum"><h4>Volume</h4><p>84.2 GiB free · 112.8 GiB after removing 28.6 GiB</p>' +
+      '<div class="dt-meter dt-meter4">' +
+      '<i style="width:77.2%;background:' + ui.meterUsed + '"></i>' +
+      '<i style="left:0;width:77.2%;background:' + mix(ui.danger, 55) + '"></i>' +
+      '<i style="left:77.2%;width:5.8%;background:' + mix(ui.success, 65) + '"></i></div></div>' +
+      '<div class="dt-spacer"></div>' +
+      '<div class="dt-btns dt-btns-r"><span class="dt-btn dt-btn-bare">Back</span><span class="dt-btn dt-btn-accent">Move 2 items to Trash</span></div>' +
+      '</div></div>';
+    s += '<div class="dt-keybar">' + hint('enter', 'move to Trash') + hint('m', 'Trash') + hint('p', 'permanent') +
+      hint('!', 'unmark all') + hint('esc', 'back') + '<div class="dt-spacer"></div><span class="dt-dim70">84.2 GiB available</span></div>';
+    return s;
+  }
+
+  // ---- context, styling and mounting ------------------------------------
+  function context(palette, appearance, opts) {
+    var mode = palette[appearance] || palette.light || palette.dark;
+    var cats = {};
+    CATS.concat(['other']).forEach(function (k) {
+      cats[k] = (mode.categories && mode.categories[k]) || (mode.categories && mode.categories.other) ||
+        { accent: '#888', fills: ['#888', '#888', '#888', '#888', '#888'] };
+    });
+    var shape = palette.shape || {};
+    return {
+      ui: mode.ui, cats: cats, age: mode.age, appearance: appearance,
+      mode: (opts && opts.mode) === 'age' ? 'age' : 'kind',
+      shape: {
+        tileRadius: shape.tileRadius || 0, gapTop: shape.gapTop == null ? 6 : shape.gapTop,
+        gapDeep: shape.gapDeep == null ? 2 : shape.gapDeep, strip: shape.strip || 'none',
+        stripWidth: shape.stripWidth == null ? 2 : shape.stripWidth, sheen: shape.sheen || 0,
+        vibrancy: !!shape.vibrancy, windowRadius: shape.windowRadius == null ? 10 : shape.windowRadius,
+      },
+    };
+  }
+
+  function varsFor(ctx) {
+    var ui = ctx.ui, s = '';
+    Object.keys(ui).forEach(function (k) {
+      if (k === 'marked') return;
+      s += '--dt-' + k + ':' + ui[k] + ';';
+    });
+    s += '--dt-marked-fill:' + ui.marked.fill + ';--dt-marked-outline:' + ui.marked.outline + ';--dt-marked-text:' + ui.marked.text + ';';
+    s += '--dt-winr:' + ctx.shape.windowRadius + 'px;';
+    s += '--dt-titlebg:' + (ctx.shape.vibrancy ? ui.sidebar : ui.background) + ';';
+    return s;
+  }
+
+  var CSS = [
+    '.dt-frame{position:relative;width:100%;overflow:hidden;line-height:1.5}',
+    '.dt-stage{position:absolute;left:0;top:0;transform-origin:0 0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;font-size:12px;-webkit-font-smoothing:antialiased;color:var(--dt-foreground)}',
+    '.dt-desktop{background:var(--dt-desktop);padding:' + PAD + 'px;box-sizing:border-box}',
+    '.dt-win{position:relative;width:' + WIN_W + 'px;height:' + WIN_H + 'px;border-radius:var(--dt-winr);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 22px 70px rgba(0,0,0,.45),0 0 0 .5px rgba(0,0,0,.35),inset 0 0 0 .5px rgba(255,255,255,.12);color:var(--dt-foreground);background:transparent;isolation:isolate}',
+    '.dt-titlebar{position:relative;height:' + TITLE_H + 'px;flex:none;display:flex;align-items:center;gap:16px;padding:0 16px 0 78px;background:var(--dt-titlebg);border-bottom:1px solid var(--dt-divider);box-sizing:border-box}',
+    '.dt-vib .dt-titlebar,.dt-vib .dt-side{-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6)}',
+    '.dt-lights{position:absolute;left:9px;top:13px;display:flex;gap:8px}.dt-lights i{width:12px;height:12px;border-radius:50%;display:block;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.15)}',
+    '.dt-logo{display:flex;align-items:center;gap:8px}.dt-logo span{font-size:18px;font-weight:700;color:var(--dt-bright);letter-spacing:-.01em}',
+    '.dt-logo-grid{display:grid;grid-template-columns:8px 8px;gap:2px}.dt-logo-grid i{width:8px;height:8px;display:block}',
+    '.dt-crumbs{display:flex;align-items:center;gap:2px;font-size:12px;white-space:nowrap}',
+    '.dt-crumb{padding:2px 4px;border-radius:4px;color:var(--dt-secondary)}.dt-crumb.is-current{color:var(--dt-bright);font-weight:600;background:' + 'color-mix(in srgb,var(--dt-foreground) 8%,transparent)' + '}',
+    '.dt-crumb b{font-weight:400;font-size:11px;color:var(--dt-secondary);margin-left:3px}.dt-sep{color:color-mix(in srgb,var(--dt-secondary) 50%,transparent)}',
+    '.dt-spacer{flex:1}',
+    '.dt-seg{display:inline-flex;padding:2px;border-radius:6px;background:color-mix(in srgb,var(--dt-foreground) 9%,transparent);box-sizing:border-box;white-space:nowrap}',
+    '.dt-seg span{flex:1;text-align:center;padding:4px 12px;border-radius:6px;font-size:12px;color:var(--dt-foreground);line-height:1.2}',
+    '.dt-seg span.is-on{background:var(--dt-accent);color:var(--dt-onAccent);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.25)}',
+    '.dt-seg176{width:176px}.dt-segfull{display:flex;width:100%}',
+    '.dt-check{display:flex;align-items:center;gap:6px;white-space:nowrap}.dt-check i{width:16px;height:16px;border-radius:4px;border:1px solid color-mix(in srgb,var(--dt-foreground) 40%,transparent);box-sizing:border-box;display:block;background:var(--dt-surface)}',
+    '.dt-check i.is-on{background:var(--dt-accent);border-color:var(--dt-accent)}.dt-check svg{display:block;margin:-1px}',
+    '.dt-stepper{display:inline-flex;align-items:stretch;border:1px solid var(--dt-border);border-radius:6px;overflow:hidden;white-space:nowrap;line-height:1.2}',
+    '.dt-stepper span{padding:4px 10px}.dt-stepper b{padding:4px 8px;font-weight:400;border-left:1px solid var(--dt-border);color:var(--dt-secondary)}',
+    '.dt-body{flex:1;display:flex;min-height:0}',
+    '.dt-main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--dt-background)}',
+    '.dt-stats{height:' + STATS_H + 'px;box-sizing:border-box;padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:11px;line-height:16px;color:var(--dt-secondary);white-space:nowrap}.dt-statsl{min-width:0;overflow:hidden;text-overflow:ellipsis}',
+    '.dt-legend{margin-left:auto;display:flex;gap:6px;flex:none;letter-spacing:-.015em}.dt-lg{display:inline-flex;align-items:center;gap:3px}.dt-lg i{width:10px;height:10px;display:block;flex:none}',
+    '.dt-canvas{position:relative;overflow:hidden;background:var(--dt-inset);margin:0 16px 8px;flex:none}',
+    '.dt-tile{position:absolute;overflow:hidden;box-sizing:border-box}.dt-ov{position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none}.dt-ring{z-index:5}',
+    '.dt-lbl{position:absolute;white-space:nowrap;overflow:hidden;font-size:12px;line-height:14px;z-index:1}.dt-name{overflow:hidden;text-overflow:clip;min-width:0}.dt-size{font-size:11px;flex:none}',
+    '.dt-side{width:' + SIDE_W + 'px;flex:none;box-sizing:border-box;background:var(--dt-sidebar);border-left:1px solid var(--dt-divider);padding:14px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden}',
+    '.dt-sec{flex:none;display:flex;flex-direction:column;gap:5px;padding-bottom:10px;border-bottom:1px solid var(--dt-divider)}.dt-sec:last-child{border-bottom:0;padding-bottom:0}.dt-disk{margin-top:auto}.dt-look{flex:0 1 auto;min-height:60px;overflow:hidden}',
+    '.dt-eyebrow{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;line-height:1.3;text-transform:uppercase;letter-spacing:.06em;color:var(--dt-secondary)}.dt-eyebrow>span:first-child{opacity:.7}.dt-eyebrow-r{text-transform:none;letter-spacing:0}',
+    '.dt-hl{color:var(--dt-highlight);font-weight:600}.dt-dim60{opacity:.6}.dt-dim70{opacity:.7;font-size:11px;color:var(--dt-secondary)}',
+    '.dt-selname{display:flex;align-items:center;gap:8px}.dt-selname i{width:4px;height:18px;display:block;flex:none;border-radius:1px}.dt-selh{font-size:18px;font-weight:700;color:var(--dt-bright);line-height:1.2}.dt-selp{font-size:11px;color:var(--dt-secondary)}',
+    '.dt-big{display:flex;align-items:baseline;gap:6px;line-height:.95;margin:2px 0}.dt-big span{font-size:40px;font-weight:700;color:var(--dt-bright);letter-spacing:-.02em}.dt-big small{font-size:14px;color:var(--dt-secondary)}',
+    '.dt-meter{position:relative;background:var(--dt-meterTrack);border-radius:2px;overflow:hidden}.dt-meter i{position:absolute;left:0;top:0;bottom:0;display:block}.dt-meter5{height:5px}.dt-meter8{height:8px;border-radius:4px}.dt-meter4{height:4px}',
+    '.dt-figs{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;line-height:1.35}.dt-figs em{display:block;font-style:normal;font-size:10px;line-height:1.2;text-transform:uppercase;letter-spacing:.06em;color:var(--dt-secondary);opacity:.7}.dt-figs b{font-size:14px;font-weight:500;color:var(--dt-bright);line-height:1.25}',
+    '.dt-btns{display:flex;gap:8px;margin-top:2px}.dt-btns>.dt-btn{flex:1}.dt-btns-r{justify-content:flex-end}.dt-btns-r>.dt-btn{flex:none}',
+    '.dt-btn{display:inline-block;text-align:center;padding:5px 12px;border-radius:6px;background:var(--dt-fill);border:1px solid var(--dt-border);font-size:12px;line-height:1.3;color:var(--dt-foreground);white-space:nowrap;box-sizing:border-box}',
+    '.dt-btn-hl{background:var(--dt-highlight);border-color:var(--dt-highlight);color:var(--dt-onHighlight);font-weight:600}',
+    '.dt-btn-accent{background:var(--dt-accent);border-color:var(--dt-accent);color:var(--dt-onAccent);font-weight:600}.dt-btn-bare{background:transparent;border-color:transparent}.dt-btn-sm{padding:3px 10px;font-size:11px}',
+    '.dt-rows{display:flex;flex-direction:column}.dt-row{display:flex;align-items:center;gap:8px;padding:2px 8px}.dt-row>i{width:2px;height:24px;display:block;flex:none}',
+    '.dt-rowt{flex:1;min-width:0}.dt-rowname{font-size:12px;color:var(--dt-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}.dt-rowdet{font-size:11px;color:var(--dt-secondary);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.dt-rowr{width:88px;flex:none;font-size:11px;color:var(--dt-foreground);text-align:right}.dt-rowr>span{display:block;margin-bottom:2px}',
+    '.dt-marks{display:flex;flex-direction:column;gap:2px;font-size:11px}.dt-mark{display:flex;align-items:center;gap:6px}.dt-mark i{width:8px;height:8px;border-radius:50%;display:block;flex:none}.dt-mark span{flex:1;color:var(--dt-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dt-mark small{font-size:11px;color:var(--dt-secondary)}.dt-mark b{font-weight:400;color:var(--dt-secondary);padding-left:4px}',
+    '.dt-diskrow{display:flex;justify-content:space-between;align-items:baseline}.dt-free{display:flex;align-items:baseline;gap:5px;line-height:1.1}.dt-free span{font-size:26px;font-weight:700;color:var(--dt-bright);letter-spacing:-.02em}.dt-free small{font-size:12px;color:var(--dt-secondary)}.dt-after{font-size:14px;color:var(--dt-highlight);font-weight:500}',
+    '.dt-diskline{display:flex;justify-content:space-between;font-size:11px;line-height:1.3;color:var(--dt-secondary)}.dt-purge{margin-top:-2px}',
+    '.dt-review{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--dt-highlight);background:color-mix(in srgb,var(--dt-highlight) 10%,transparent);border-radius:6px;padding:7px 12px;font-size:12px;line-height:1.3;color:var(--dt-bright);margin-top:2px}',
+    '.dt-keybar{height:' + KEYBAR_H + 'px;box-sizing:border-box;flex:none;display:flex;align-items:center;gap:16px;padding:4px 16px;border-top:1px solid var(--dt-divider);background:var(--dt-background);white-space:nowrap}',
+    '.dt-hint{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--dt-secondary)}',
+    '.dt-key{display:inline-block;min-width:24px;box-sizing:border-box;text-align:center;padding:3px 8px;border-radius:4px;border:1px solid var(--dt-border);background:var(--dt-inset);font:700 11px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:var(--dt-foreground)}',
+    // Review screen
+    '.dt-rvtitle{font-size:14px;font-weight:700;color:var(--dt-bright)}.dt-rvsub{font-size:11px;color:var(--dt-secondary)}',
+    '.dt-rvbody{flex:1;min-height:0;display:flex;gap:16px;padding:16px;background:var(--dt-background)}',
+    '.dt-well{flex:1;min-width:0;background:var(--dt-inset);border:1px solid var(--dt-border);border-radius:8px;overflow:hidden;align-self:flex-start;width:100%}',
+    '.dt-rvrow{display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--dt-divider)}.dt-rvrow:last-child{border-bottom:0}',
+    '.dt-folder{color:var(--dt-secondary);display:flex}.dt-glyph{width:96px;flex:none;font-size:11px;color:var(--dt-secondary);letter-spacing:1px;font-family:"SF Mono",Menlo,monospace}.dt-rvsize{width:80px;flex:none;text-align:right;color:var(--dt-bright);font-size:12px}',
+    '.dt-summary{width:360px;flex:none;box-sizing:border-box;background:var(--dt-surface);border:1px solid var(--dt-border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:24px}',
+    '.dt-sum h4{margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dt-secondary)}.dt-sum p{margin:8px 0 0;font-size:11px;color:var(--dt-secondary)}',
+    '.dt-tot{display:flex;justify-content:space-between;font-size:11px;line-height:1.7}.dt-tot span{color:var(--dt-secondary)}.dt-tot b{font-weight:500;color:var(--dt-bright)}',
+    // Treemap-only preview
+    '.dt-mini{box-sizing:border-box;background:var(--dt-background);padding:8px;display:flex;flex-direction:column;gap:6px;border-radius:8px}',
+    '.dt-mini .dt-canvas{margin:0}.dt-mini .dt-legend{margin:0;flex-wrap:wrap;font-size:11px;color:var(--dt-secondary);gap:10px}',
+  ].join('\n');
+
+  function ensureStyle() {
+    if (document.getElementById('dt-mock-style')) return;
+    var st = document.createElement('style');
+    st.id = 'dt-mock-style';
+    st.textContent = CSS;
+    document.head.appendChild(st);
+  }
+
+  // Mounts a stage of design size (w, h) into el and keeps it scaled to el's
+  // width. Re-rendering into the same el replaces the previous stage.
+  function mount(el, w, h, html, vars, cls) {
+    ensureStyle();
+    if (el.__dtRO) { el.__dtRO.disconnect(); el.__dtRO = null; }
+    if (el.__dtOnResize) { window.removeEventListener('resize', el.__dtOnResize); el.__dtOnResize = null; }
+    el.classList.add('dt-frame');
+    el.innerHTML = '<div class="dt-stage ' + (cls || '') + '" style="width:' + w + 'px;height:' + h + 'px;' + vars + '">' + html + '</div>';
+    var stage = el.firstChild;
+    function fit() {
+      var cw = el.clientWidth || w;
+      var s = cw / w;
+      stage.style.transform = 'scale(' + s + ')';
+      el.style.height = (h * s) + 'px';
+    }
+    fit();
+    if (typeof ResizeObserver !== 'undefined') {
+      el.__dtRO = new ResizeObserver(fit);
+      el.__dtRO.observe(el);
+    } else {
+      el.__dtOnResize = fit;
+      window.addEventListener('resize', fit);
+    }
+    return { fit: fit, stage: stage };
+  }
+
+  function windowStage(ctx, inner) {
+    return '<div class="dt-desktop" style="width:' + (WIN_W + 2 * PAD) + 'px;height:' + (WIN_H + 2 * PAD) + 'px">' +
+      '<div class="dt-win' + (ctx.shape.vibrancy ? ' dt-vib' : '') + '">' + inner + '</div></div>';
+  }
+
+  function renderExplore(el, palette, appearance, opts) {
+    var ctx = context(palette, appearance, opts);
+    return mount(el, WIN_W + 2 * PAD, WIN_H + 2 * PAD, windowStage(ctx, exploreHTML(ctx)), varsFor(ctx));
+  }
+  function renderReview(el, palette, appearance) {
+    var ctx = context(palette, appearance, {});
+    return mount(el, WIN_W + 2 * PAD, WIN_H + 2 * PAD, windowStage(ctx, reviewHTML(ctx)), varsFor(ctx));
+  }
+  function renderTreemapOnly(el, palette, appearance, opts) {
+    var ctx = context(palette, appearance, opts);
+    var cw = MINI_W - 16, ch = MINI_H - 16 - 6 - 18;
+    var html = '<div class="dt-mini" style="width:' + MINI_W + 'px;height:' + MINI_H + 'px">' +
+      '<div class="dt-canvas" style="width:' + cw + 'px;height:' + ch + 'px">' + treemapHTML(ctx, cw, ch) + '</div>' +
+      legendHTML(ctx) + '</div>';
+    return mount(el, MINI_W, MINI_H, html, varsFor(ctx));
+  }
+
+  window.DisktreeMock = {
+    renderExplore: renderExplore,
+    renderReview: renderReview,
+    renderTreemapOnly: renderTreemapOnly,
+    tree: TREE,
+    categories: CATS,
+    categoryLabels: CAT_LABELS,
+    ageLabels: AGE_LABELS,
+    design: { width: WIN_W + 2 * PAD, height: WIN_H + 2 * PAD, window: [WIN_W, WIN_H] },
+  };
+})();
+
+</script>
+<textarea class="copy-fallback" id="copy-fallback" aria-hidden="true" tabindex="-1"></textarea>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var PALETTES = (window.PALETTES || []).filter(function (p) { return p && p.id && (p.light || p.dark); });
+  var M = window.DisktreeMock;
+  var CATS = M ? M.categories : [];
+  var CAT_LABELS = M ? M.categoryLabels : [];
+
+  var state = { palette: PALETTES.some(function (p) { return p.id === 'catppuccin-frappe'; }) ? 'catppuccin-frappe' : (PALETTES.length ? PALETTES[0].id : null), appearance: 'dark', mode: 'kind', screen: 'explore' };
+  try {
+    var saved = JSON.parse(localStorage.getItem('disktree-palettes') || 'null');
+    if (saved) {
+      if (saved.appearance) state.appearance = saved.appearance;
+      if (saved.mode) state.mode = saved.mode;
+      if (saved.screen) state.screen = saved.screen;
+      if (saved.palette && PALETTES.some(function (p) { return p.id === saved.palette; })) state.palette = saved.palette;
+    }
+  } catch (e) { /* storage unavailable */ }
+  if (state.appearance === 'dark' || state.appearance === 'light' || state.appearance === 'both') { /* ok */ } else state.appearance = 'dark';
+  function save() { try { localStorage.setItem('disktree-palettes', JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+  function byId(id) { for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === id) return PALETTES[i]; return null; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function modeOf(p, a) { return p[a] || p.light || p.dark; }
+  function accents(p, a) {
+    var m = modeOf(p, a);
+    return CATS.map(function (k) { var c = m.categories && m.categories[k]; return c ? c.accent : 'transparent'; });
+  }
+  function stripHTML(p, a) {
+    return '<div class="strip" title="' + a + '">' + accents(p, a).map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</div>';
+  }
+
+  // Controls
+  var segs = document.querySelectorAll('.seg[data-ctl]');
+  Array.prototype.forEach.call(segs, function (seg) {
+    var key = seg.getAttribute('data-ctl');
+    seg.addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      state[key] = b.getAttribute('data-v'); save(); render();
+    });
+  });
+  function syncControls() {
+    Array.prototype.forEach.call(segs, function (seg) {
+      var key = seg.getAttribute('data-ctl');
+      Array.prototype.forEach.call(seg.querySelectorAll('button'), function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-v') === state[key] ? 'true' : 'false');
+      });
+    });
+  }
+  document.addEventListener('keydown', function (ev) {
+    if (ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+    if (!PALETTES.length) return;
+    var i = PALETTES.findIndex(function (p) { return p.id === state.palette; });
+    i = (i + (ev.key === 'ArrowRight' ? 1 : -1) + PALETTES.length) % PALETTES.length;
+    state.palette = PALETTES[i].id; save(); render(); ev.preventDefault();
+  });
+
+  // Palette rail
+  var rail = document.getElementById('rail');
+  function renderRail() {
+    if (!PALETTES.length) { rail.innerHTML = '<div class="empty">No palettes loaded.</div>'; return; }
+    rail.innerHTML = PALETTES.map(function (p, i) {
+      var fl = p.flavours || {};
+      return '<button class="card" data-id="' + esc(p.id) + '" aria-pressed="' + (p.id === state.palette) + '">' +
+        '<div class="name"><b>' + esc(p.name) + '</b><span>' + esc(p.family) + '</span>' + (i === 0 ? '<span class="base">Baseline</span>' : '') + '</div>' +
+        '<div class="flav">' + esc(fl.light || 'Light') + ' &middot; ' + esc(fl.dark || 'Dark') + '</div>' +
+        '<div class="pitch">' + esc(p.pitch) + '</div>' +
+        '<div class="strips">' + stripHTML(p, 'light') + stripHTML(p, 'dark') + '</div></button>';
+    }).join('');
+  }
+  rail.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.card'); if (!b) return;
+    state.palette = b.getAttribute('data-id'); save(); render();
+  });
+
+  // Stage
+  var stage = document.getElementById('stage');
+  function renderStage() {
+    var p = byId(state.palette);
+    document.getElementById('stage-sub').textContent = p ? (p.name + ' — ' + (state.screen === 'review' ? 'Review' : 'Explore') + (state.mode === 'age' && state.screen !== 'review' ? ', coloured by age' : '')) : '';
+    stage.className = 'stage' + (state.appearance === 'both' ? ' both' : '');
+    if (!p) { stage.innerHTML = '<div class="empty">Nothing selected.</div>'; return; }
+    var apps = state.appearance === 'both' ? ['light', 'dark'] : [state.appearance];
+    stage.innerHTML = apps.map(function (a) {
+      var fl = (p.flavours || {})[a] || a;
+      return '<div><div class="shot" data-app="' + a + '"></div><div class="shot-cap">' + esc(fl) + ' &middot; ' + a + '</div></div>';
+    }).join('');
+    Array.prototype.forEach.call(stage.querySelectorAll('.shot'), function (el) {
+      var a = el.getAttribute('data-app');
+      if (state.screen === 'review') M.renderReview(el, p, a);
+      else M.renderExplore(el, p, a, { mode: state.mode });
+    });
+  }
+
+  // Glance grid
+  var glance = document.getElementById('glance');
+  function renderGlance() {
+    if (!PALETTES.length) { glance.innerHTML = ''; return; }
+    var apps = state.appearance === 'both' ? ['light', 'dark'] : [state.appearance];
+    glance.innerHTML = PALETTES.map(function (p) {
+      return '<button data-id="' + esc(p.id) + '" aria-pressed="' + (p.id === state.palette) + '">' +
+        '<div class="pair">' + apps.map(function (a) { return '<div class="mini" data-app="' + a + '"></div>'; }).join('') + '</div>' +
+        '<div class="cap"><b>' + esc(p.name) + '</b><span>' + esc(p.family) + '</span></div></button>';
+    }).join('');
+    Array.prototype.forEach.call(glance.querySelectorAll('button'), function (b) {
+      var p = byId(b.getAttribute('data-id'));
+      Array.prototype.forEach.call(b.querySelectorAll('.mini'), function (el) {
+        M.renderTreemapOnly(el, p, el.getAttribute('data-app'), { mode: state.mode });
+      });
+    });
+  }
+  glance.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    state.palette = b.getAttribute('data-id'); save(); render();
+    document.getElementById('stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Token sheet
+  var tokens = document.getElementById('tokens');
+  function swatch(v) {
+    return '<span class="sw"><i><b style="background:' + esc(v) + '"></b></i><code>' + esc(v) + '</code></span>';
+  }
+  function fillsHTML(arr) {
+    return '<span class="fills">' + (arr || []).map(function (c) { return '<i style="background:' + esc(c) + '" title="' + esc(c) + '"></i>'; }).join('') + '</span>';
+  }
+  function renderTokens() {
+    var p = byId(state.palette);
+    if (!p) { tokens.innerHTML = '<div class="empty">Nothing selected.</div>'; return; }
+    var L = modeOf(p, 'light'), D = modeOf(p, 'dark');
+    var keys = [];
+    Object.keys(L.ui || {}).concat(Object.keys(D.ui || {})).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+    var s = '<div class="tokens-head"><h3>' + esc(p.name) + '</h3><span class="sub" style="font-size:12px;color:var(--fg-2)">' + esc(p.family) + '</span>' +
+      '<button class="btn primary" id="copy-tokens">Copy tokens</button></div>';
+    var sh = p.shape || {};
+    s += '<div class="tok-group"><h4>Shape</h4><div style="font-size:11px;color:var(--fg-2);font-family:var(--mono)">' +
+      Object.keys(sh).map(function (k) { return esc(k) + ': ' + esc(JSON.stringify(sh[k])); }).join(' &middot; ') + '</div></div>';
+    s += '<div class="tok-group"><h4>UI</h4><div class="tok-cols"><span>token</span><span>light</span><span>dark</span></div><div class="tok-grid">';
+    keys.forEach(function (k) {
+      var lv = L.ui[k], dv = D.ui[k];
+      if (k === 'marked') {
+        ['fill', 'outline', 'text'].forEach(function (sub) {
+          s += '<div class="tok"><span class="k">marked.' + sub + '</span>' + swatch(lv ? lv[sub] : '') + swatch(dv ? dv[sub] : '') + '</div>';
+        });
+        return;
+      }
+      s += '<div class="tok"><span class="k">' + esc(k) + '</span>' + swatch(lv) + swatch(dv) + '</div>';
+    });
+    s += '</div></div>';
+    s += '<div class="tok-group"><h4>Categories: accent and fills depth 0 to 4</h4><div class="tok-cols"><span>category</span><span>light</span><span>dark</span></div>';
+    CATS.concat(['other']).forEach(function (k, i) {
+      var lc = (L.categories || {})[k] || {}, dc = (D.categories || {})[k] || {};
+      s += '<div class="catrow"><span class="k">' + esc(CAT_LABELS[i] || 'Other') + '</span>' +
+        '<span class="catcell">' + swatch(lc.accent || '') + fillsHTML(lc.fills) + (lc.text ? swatch(lc.text) : '') + '</span>' +
+        '<span class="catcell">' + swatch(dc.accent || '') + fillsHTML(dc.fills) + (dc.text ? swatch(dc.text) : '') + '</span></div>';
+    });
+    s += '</div>';
+    s += '<div class="tok-group"><h4>Age: swatch and fills depth 0 to 4</h4><div class="tok-cols"><span>bucket</span><span>light</span><span>dark</span></div>';
+    (M ? M.ageLabels : []).forEach(function (l, i) {
+      var la = L.age || { swatches: [], fills: [] }, da = D.age || { swatches: [], fills: [] };
+      s += '<div class="catrow"><span class="k">' + esc(l) + '</span>' +
+        '<span class="catcell">' + swatch(la.swatches[i] || '') + fillsHTML(la.fills[i]) + '</span>' +
+        '<span class="catcell">' + swatch(da.swatches[i] || '') + fillsHTML(da.fills[i]) + '</span></div>';
+    });
+    s += '</div>';
+    tokens.innerHTML = s;
+    document.getElementById('copy-tokens').addEventListener('click', function () {
+      var text = JSON.stringify(p, null, 2);
+      var done = function () { toast('Copied ' + p.name + ' tokens'); };
+      var fallback = function () {
+        var ta = document.getElementById('copy-fallback');
+        ta.value = text; ta.className = ''; ta.style.position = 'fixed'; ta.style.left = '16px'; ta.style.top = '16px';
+        ta.style.width = '320px'; ta.style.height = '200px'; ta.style.opacity = '1'; ta.style.zIndex = '60';
+        ta.focus(); ta.select();
+        try { if (document.execCommand('copy')) { done(); ta.className = 'copy-fallback'; ta.removeAttribute('style'); return; } } catch (e) { /* fall through */ }
+        toast('Press ⌘C to copy, then Esc');
+        ta.addEventListener('keydown', function h(ev) { if (ev.key === 'Escape') { ta.className = 'copy-fallback'; ta.removeAttribute('style'); ta.removeEventListener('keydown', h); } });
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else fallback();
+    });
+  }
+
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  function render() {
+    syncControls();
+    if (!M) {
+      stage.innerHTML = '<div class="empty">renderer.js did not load.</div>';
+      rail.innerHTML = ''; glance.innerHTML = ''; tokens.innerHTML = '';
+      return;
+    }
+    renderRail();
+    renderStage();
+    renderGlance();
+    renderTokens();
+  }
+  render();
+})();
+</script>

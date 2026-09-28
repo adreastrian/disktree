@@ -17,14 +17,16 @@ use gpui_kit::{
     InteractiveElement as _, IntoElement, MouseButton, MouseDownEvent,
     MouseMoveEvent, ParentElement as _, Pixels, Point, ScrollWheelEvent,
     SharedString, Size, StatefulInteractiveElement as _, Styled, TextAlign,
-    TextRun, Window, canvas, div, pattern_slash, px, quad,
+    TextRun, Window, canvas, div, linear_color_stop, linear_gradient,
+    pattern_slash, px, quad, white,
 };
 
 use disktree_core::classify::Category;
 
-use crate::palette;
+use crate::palette::{self, CATEGORIES, category_index};
 use crate::state::{Disktree, Filtered, Label, View};
 use crate::theme::{ActiveTheme, Theme};
+use crate::themes::{DEPTHS, Shape, Strip};
 
 /// How one tile should be drawn, resolved before the paint callback runs so
 /// that painting never has to look anything up.
@@ -143,9 +145,9 @@ pub fn mosaic(
         )
 }
 
-/// Theme colours resolved once per frame.
+/// Theme colours and tile geometry resolved once per frame.
 struct Colors {
-    label: [Hsla; 2],
+    label: Hsla,
     label_dim: Hsla,
     hover_border: Hsla,
     selected_border: Hsla,
@@ -157,34 +159,14 @@ struct Colors {
     fill: Vec<[Hsla; DEPTHS]>,
     /// The strip over a top-level directory, per category.
     strip: Vec<Hsla>,
+    /// The ink for a name on each category's fills.
+    ink: Vec<Hsla>,
     /// Fills per age bucket, then per depth.
     age: Vec<[Hsla; DEPTHS]>,
     marked_fill: Hsla,
     /// The surface a filtered-out fill steps back toward.
     inset: Hsla,
-}
-
-/// Depth steps a fill distinguishes; deeper clamps.
-const DEPTHS: usize = 5;
-
-/// Every category, in the order [`category_index`] numbers them.
-const CATEGORIES: [Category; 9] = [
-    Category::Code,
-    Category::AgentScratch,
-    Category::Toolchain,
-    Category::Synced,
-    Category::Git,
-    Category::Media,
-    Category::Documents,
-    Category::Cache,
-    Category::Other,
-];
-
-fn category_index(category: Category) -> usize {
-    CATEGORIES
-        .iter()
-        .position(|&known| known == category)
-        .unwrap_or(CATEGORIES.len() - 1)
+    shape: Shape,
 }
 
 impl Colors {
@@ -193,15 +175,12 @@ impl Colors {
             std::array::from_fn(|depth| fill(depth as u32))
         };
         Self {
-            label: [
-                palette::label_color(theme, 0),
-                palette::label_color(theme, 1),
-            ],
-            label_dim: palette::label_color(theme, 1).opacity(0.5),
-            hover_border: theme.bright.opacity(0.55),
+            label: palette::label_color(theme),
+            label_dim: theme.label_dim,
+            hover_border: theme.hover,
             selected_border: palette::highlight(theme),
-            marked_border: theme.danger,
-            marked_label: theme.danger,
+            marked_border: theme.marked_outline,
+            marked_label: theme.marked_text,
             warning: theme.warning,
             hatch: palette::hatch(theme),
             fill: CATEGORIES
@@ -216,13 +195,18 @@ impl Colors {
                 .iter()
                 .map(|&category| palette::category_accent(theme, category))
                 .collect(),
+            ink: CATEGORIES
+                .iter()
+                .map(|&category| palette::category_label(theme, category))
+                .collect(),
             age: (0..palette::AGE_BUCKETS.len())
                 .map(|bucket| {
                     ladder(&|depth| palette::age_fill(theme, bucket, depth))
                 })
                 .collect(),
-            marked_fill: palette::mix(theme.inset, theme.danger, 0.16),
+            marked_fill: theme.marked_fill,
             inset: theme.inset,
+            shape: *theme.shape,
         }
     }
 
@@ -245,8 +229,12 @@ impl Colors {
         }
     }
 
-    const fn label(&self, depth: u32) -> Hsla {
-        self.label[if depth == 0 { 0 } else { 1 }]
+    /// The ink for `label`: the category's own over a category fill, the
+    /// theme's over an age fill.
+    fn label(&self, label: &Label) -> Hsla {
+        label
+            .category
+            .map_or(self.label, |category| self.ink[category_index(category)])
     }
 }
 
@@ -260,6 +248,19 @@ fn paint_tiles(
     let none = Edges::all(px(0.));
     let solid = gpui_kit::BorderStyle::Solid;
     let scale = window.scale_factor();
+    let shape = &colors.shape;
+    let radius = px(f32::from(shape.tile_radius));
+    let corners = Corners::all(radius);
+    // The sheen is a wash of white fading down the tile: one gradient quad,
+    // which costs what the fill did.
+    let sheen = (shape.sheen > 0).then(|| {
+        let top = white().opacity(f32::from(shape.sheen) / 100.0);
+        linear_gradient(
+            180.,
+            linear_color_stop(top, 0.),
+            linear_color_stop(white().opacity(0.), 1.),
+        )
+    });
     // Outlines are drawn after every fill: a directory's children paint over
     // its body, and would otherwise cover its selection ring, leaving only
     // slivers of it showing in the gaps between them.
@@ -275,12 +276,22 @@ fn paint_tiles(
         // top-level directories, are what separate them.
         window.paint_quad(quad(
             quad_bounds,
-            Corners::default(),
+            corners,
             colors.fill(tile),
             none,
             colors.hover_border,
             solid,
         ));
+        if let Some(sheen) = sheen {
+            window.paint_quad(quad(
+                quad_bounds,
+                corners,
+                sheen,
+                none,
+                colors.hover_border,
+                solid,
+            ));
+        }
 
         // Reclaimable space is hatched, over any hue: the hatch answers
         // "can it go", the colour "what is it". Everything inside a
@@ -293,7 +304,7 @@ fn paint_tiles(
         {
             window.paint_quad(quad(
                 quad_bounds,
-                Corners::default(),
+                corners,
                 pattern_slash(colors.hatch, 1.0, 6.0),
                 none,
                 colors.hatch,
@@ -301,27 +312,76 @@ fn paint_tiles(
             ));
         }
 
-        // A top-level directory carries a thin strip of its colour, so the
-        // first level of structure reads before any detail.
+        // A top-level directory carries its colour, so the first level of
+        // structure reads before any detail: a band along an edge, or a
+        // dot in the corner, as the theme has it.
         if tile.depth == 0
             && tile.age_bucket.is_none()
             && tile.filtered != Filtered::Out
         {
-            let strip = Bounds::new(
-                quad_bounds.origin,
-                Size::new(
-                    quad_bounds.size.width,
-                    px(2.0_f32.min(quad_bounds.size.height.as_f32())),
-                ),
-            );
-            window.paint_quad(quad(
-                strip,
-                Corners::default(),
-                colors.strip[category_index(tile.category)],
-                none,
-                colors.hover_border,
-                solid,
-            ));
+            let accent = colors.strip[category_index(tile.category)];
+            let width = f32::from(shape.strip_width);
+            let Bounds { origin, size } = quad_bounds;
+            let band = match shape.strip {
+                Strip::Top => Some((
+                    Bounds::new(
+                        origin,
+                        Size::new(
+                            size.width,
+                            px(width.min(size.height.as_f32())),
+                        ),
+                    ),
+                    Corners {
+                        top_left: radius,
+                        top_right: radius,
+                        bottom_right: px(0.),
+                        bottom_left: px(0.),
+                    },
+                )),
+                Strip::Left => Some((
+                    Bounds::new(
+                        origin,
+                        Size::new(
+                            px(width.min(size.width.as_f32())),
+                            size.height,
+                        ),
+                    ),
+                    Corners {
+                        top_left: radius,
+                        top_right: px(0.),
+                        bottom_right: px(0.),
+                        bottom_left: radius,
+                    },
+                )),
+                Strip::Dot => {
+                    // Inset by its own radius, so it sits off both edges
+                    // by as much as it is wide; a tile too small to hold
+                    // it is not one whose structure needs pointing out.
+                    let inset = px(width / 2.);
+                    let fits = size.width > px(width * 2.)
+                        && size.height > px(width * 2.);
+                    fits.then(|| {
+                        (
+                            Bounds::new(
+                                Point::new(origin.x + inset, origin.y + inset),
+                                Size::new(px(width), px(width)),
+                            ),
+                            Corners::all(px(width / 2.)),
+                        )
+                    })
+                }
+                Strip::None => None,
+            };
+            if let Some((band, band_corners)) = band {
+                window.paint_quad(quad(
+                    band,
+                    band_corners,
+                    accent,
+                    none,
+                    colors.hover_border,
+                    solid,
+                ));
+            }
         }
 
         if tile.unreadable && rect.w > 12.0 && rect.h > 12.0 {
@@ -361,7 +421,7 @@ fn paint_tiles(
     for (_, ring, width, color) in outlines {
         window.paint_quad(quad(
             ring,
-            Corners::default(),
+            corners,
             gpui_kit::transparent_black(),
             Edges::all(px(width)),
             color,
@@ -425,8 +485,20 @@ fn paint_labels(
             continue;
         }
         let mask = to_window(&rect, bounds);
+        // A first-level name starts past the strip its tile carries in its
+        // corner or down its left edge, so the two never overprint.
+        let strip = if label.depth == 0 && label.category.is_some() {
+            let width = f32::from(colors.shape.strip_width);
+            match colors.shape.strip {
+                Strip::Left => px(width),
+                Strip::Dot => px(width * 2.),
+                Strip::Top | Strip::None => px(0.),
+            }
+        } else {
+            px(0.)
+        };
         let origin = Point::new(
-            mask.origin.x + text_padding,
+            mask.origin.x + text_padding + strip,
             mask.origin.y + text_inset,
         );
         let color = if label.marked {
@@ -434,7 +506,7 @@ fn paint_labels(
         } else if label.dim {
             colors.label_dim
         } else {
-            colors.label(label.depth)
+            colors.label(label)
         };
         // The first level is set in bold in its band: it names a region.
         let weight = if label.depth == 0 && label.header.is_some() {

@@ -1,0 +1,421 @@
+<title>Disktree Palettes</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --bg-elev: #ffffff;
+    --fg: #1d1d1f;
+    --fg-2: #6e6e73;
+    --fg-3: #a1a1a6;
+    --line: rgba(0, 0, 0, .1);
+    --line-strong: rgba(0, 0, 0, .18);
+    --fill: rgba(0, 0, 0, .05);
+    --fill-hover: rgba(0, 0, 0, .08);
+    --accent: #0a60ff;
+    --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 8px 24px rgba(0, 0, 0, .06);
+    --seg-track: rgba(0, 0, 0, .06);
+    --seg-on: #ffffff;
+    --seg-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .06);
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161618;
+      --bg-elev: #1f1f22;
+      --fg: #f5f5f7;
+      --fg-2: #a1a1a6;
+      --fg-3: #6e6e73;
+      --line: rgba(255, 255, 255, .1);
+      --line-strong: rgba(255, 255, 255, .2);
+      --fill: rgba(255, 255, 255, .06);
+      --fill-hover: rgba(255, 255, 255, .1);
+      --accent: #3b8bff;
+      --on-accent: #ffffff;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+      --seg-track: rgba(255, 255, 255, .08);
+      --seg-on: #4a4a4f;
+      --seg-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161618;
+    --bg-elev: #1f1f22;
+    --fg: #f5f5f7;
+    --fg-2: #a1a1a6;
+    --fg-3: #6e6e73;
+    --line: rgba(255, 255, 255, .1);
+    --line-strong: rgba(255, 255, 255, .2);
+    --fill: rgba(255, 255, 255, .06);
+    --fill-hover: rgba(255, 255, 255, .1);
+    --accent: #3b8bff;
+    --on-accent: #ffffff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    --seg-track: rgba(255, 255, 255, .08);
+    --seg-on: #4a4a4f;
+    --seg-shadow: 0 1px 2px rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 1440px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 900px) { .wrap { padding: 0 32px; } }
+
+  header.top { padding: 40px 0 20px; }
+  header.top h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  header.top p { margin: 6px 0 0; color: var(--fg-2); max-width: 64ch; }
+
+  .controls {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid var(--line);
+  }
+  .controls .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; padding-top: 10px; padding-bottom: 10px; }
+  .ctl { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--fg-2); }
+  .ctl label { white-space: nowrap; }
+  .seg { display: inline-flex; padding: 2px; border-radius: 7px; background: var(--seg-track); }
+  .seg button {
+    appearance: none; border: 0; background: transparent; color: var(--fg); font: inherit; font-size: 12px;
+    padding: 3px 12px; border-radius: 5px; cursor: pointer; white-space: nowrap; line-height: 1.4;
+  }
+  .seg button[aria-pressed="true"] { background: var(--seg-on); box-shadow: var(--seg-shadow); font-weight: 600; }
+  .ctl .hintkey { margin-left: auto; color: var(--fg-3); font-size: 11px; }
+  .ctl kbd { font: inherit; font-size: 10px; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: 4px; }
+
+  section { padding: 24px 0 8px; }
+  section h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); }
+
+  .rail { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .card {
+    text-align: left; font: inherit; color: inherit; cursor: pointer;
+    background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .card:hover { border-color: var(--line-strong); }
+  .card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .card .name { display: flex; align-items: baseline; gap: 8px; }
+  .card .name b { font-size: 15px; font-weight: 600; }
+  .card .name span { font-size: 11px; color: var(--fg-2); }
+  .card .base { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; margin-left: auto; }
+  .card .flav { font-size: 11px; color: var(--fg-2); }
+  .card .pitch { font-size: 12px; color: var(--fg-2); line-height: 1.4; }
+  .strips { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+  .strip { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; height: 10px; border-radius: 3px; overflow: hidden; }
+  .strip i { display: block; }
+
+  .stage-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stage-head h2 { margin: 0; }
+  .stage-head .sub { font-size: 12px; color: var(--fg-2); }
+  .stage { display: grid; gap: 20px; grid-template-columns: 1fr; }
+  .stage.both { grid-template-columns: 1fr; }
+  @media (min-width: 1200px) { .stage.both { grid-template-columns: 1fr 1fr; } }
+  .shot { border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); background: var(--bg-elev); }
+  .shot-cap { font-size: 11px; color: var(--fg-2); margin-top: 6px; }
+
+  .glance { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .glance button { appearance: none; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-elev); cursor: pointer; overflow: hidden; text-align: left; font: inherit; color: inherit; }
+  .glance button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .glance .cap { padding: 8px 12px; font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
+  .glance .cap span { color: var(--fg-2); }
+  .glance .pair { display: grid; grid-template-columns: 1fr; }
+
+  .tokens { background: var(--bg-elev); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .tokens-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tokens-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .tokens-head .btn { margin-left: auto; }
+  .btn { appearance: none; font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--fill); color: var(--fg); cursor: pointer; }
+  .btn:hover { background: var(--fill-hover); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .tok-group { margin-top: 16px; }
+  .tok-group h4 { margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); }
+  .tok-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 4px 20px; }
+  .tok { display: grid; grid-template-columns: 96px 1fr 1fr; align-items: center; gap: 8px; font-size: 11px; padding: 2px 0; }
+  .tok .k { color: var(--fg-2); font-family: var(--mono); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sw { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .sw i { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; background-image: linear-gradient(45deg, rgba(128,128,128,.25) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.25) 75%), linear-gradient(45deg, rgba(128,128,128,.25) 25%, transparent 25%, transparent 75%, rgba(128,128,128,.25) 75%); background-size: 8px 8px; background-position: 0 0, 4px 4px; }
+  .sw i b { display: block; width: 100%; height: 100%; border-radius: 3px; }
+  .sw code { font-family: var(--mono); font-size: 10px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tok-cols { display: grid; grid-template-columns: 96px 1fr 1fr; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-3); margin-bottom: 4px; }
+  .fills { display: flex; gap: 2px; }
+  .fills i { width: 14px; height: 18px; display: block; border: 1px solid var(--line); }
+  .fills i:first-child { border-radius: 4px 0 0 4px; } .fills i:last-child { border-radius: 0 4px 4px 0; }
+  .catrow { display: grid; grid-template-columns: 96px 1fr 1fr; gap: 8px; align-items: center; font-size: 11px; padding: 3px 0; }
+  .catrow .k { color: var(--fg-2); }
+  .catcell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .catcell code { font-family: var(--mono); font-size: 10px; color: var(--fg-2); white-space: nowrap; }
+  .copy-fallback { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; }
+  .toast.show { opacity: 1; }
+  .empty { padding: 40px; text-align: center; color: var(--fg-2); border: 1px dashed var(--line-strong); border-radius: 10px; }
+  footer { padding: 32px 0 48px; font-size: 11px; color: var(--fg-3); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Disktree palettes</h1>
+    <p>Candidate colour systems for Disktree's treemap and chrome, each painted on the same mock of the app so they can be compared as they would ship.</p>
+  </header>
+</div>
+
+<div class="controls">
+  <div class="wrap">
+    <div class="ctl"><label>Appearance</label><div class="seg" data-ctl="appearance">
+      <button data-v="light">Light</button><button data-v="dark">Dark</button><button data-v="both">Side by side</button>
+    </div></div>
+    <div class="ctl"><label>Colour by</label><div class="seg" data-ctl="mode">
+      <button data-v="kind">Kind</button><button data-v="age">Age</button>
+    </div></div>
+    <div class="ctl"><label>Screen</label><div class="seg" data-ctl="screen">
+      <button data-v="explore">Explore</button><button data-v="review">Review</button>
+    </div></div>
+    <div class="ctl hintkey"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch palette</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section>
+    <h2>Palettes</h2>
+    <div class="rail" id="rail"></div>
+  </section>
+
+  <section>
+    <div class="stage-head"><h2 id="stage-title">Selected</h2><span class="sub" id="stage-sub"></span></div>
+    <div class="stage" id="stage"></div>
+  </section>
+
+  <section>
+    <h2>All palettes at a glance</h2>
+    <div class="glance" id="glance"></div>
+  </section>
+
+  <section>
+    <h2>Tokens</h2>
+    <div class="tokens" id="tokens"></div>
+  </section>
+
+  <footer>Mock data: a 412.3 GiB home directory. Sizes, counts and paths are illustrative.</footer>
+</div>
+<script src="palettes-catppuccin.js"></script>
+<script src="palettes-native.js"></script>
+<script src="renderer.js"></script>
+<textarea class="copy-fallback" id="copy-fallback" aria-hidden="true" tabindex="-1"></textarea>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var PALETTES = (window.PALETTES || []).filter(function (p) { return p && p.id && (p.light || p.dark); });
+  var M = window.DisktreeMock;
+  var CATS = M ? M.categories : [];
+  var CAT_LABELS = M ? M.categoryLabels : [];
+
+  var state = { palette: PALETTES.some(function (p) { return p.id === 'catppuccin-frappe'; }) ? 'catppuccin-frappe' : (PALETTES.length ? PALETTES[0].id : null), appearance: 'dark', mode: 'kind', screen: 'explore' };
+  try {
+    var saved = JSON.parse(localStorage.getItem('disktree-palettes') || 'null');
+    if (saved) {
+      if (saved.appearance) state.appearance = saved.appearance;
+      if (saved.mode) state.mode = saved.mode;
+      if (saved.screen) state.screen = saved.screen;
+      if (saved.palette && PALETTES.some(function (p) { return p.id === saved.palette; })) state.palette = saved.palette;
+    }
+  } catch (e) { /* storage unavailable */ }
+  if (state.appearance === 'dark' || state.appearance === 'light' || state.appearance === 'both') { /* ok */ } else state.appearance = 'dark';
+  function save() { try { localStorage.setItem('disktree-palettes', JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+  function byId(id) { for (var i = 0; i < PALETTES.length; i++) if (PALETTES[i].id === id) return PALETTES[i]; return null; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function modeOf(p, a) { return p[a] || p.light || p.dark; }
+  function accents(p, a) {
+    var m = modeOf(p, a);
+    return CATS.map(function (k) { var c = m.categories && m.categories[k]; return c ? c.accent : 'transparent'; });
+  }
+  function stripHTML(p, a) {
+    return '<div class="strip" title="' + a + '">' + accents(p, a).map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</div>';
+  }
+
+  // Controls
+  var segs = document.querySelectorAll('.seg[data-ctl]');
+  Array.prototype.forEach.call(segs, function (seg) {
+    var key = seg.getAttribute('data-ctl');
+    seg.addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (!b) return;
+      state[key] = b.getAttribute('data-v'); save(); render();
+    });
+  });
+  function syncControls() {
+    Array.prototype.forEach.call(segs, function (seg) {
+      var key = seg.getAttribute('data-ctl');
+      Array.prototype.forEach.call(seg.querySelectorAll('button'), function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-v') === state[key] ? 'true' : 'false');
+      });
+    });
+  }
+  document.addEventListener('keydown', function (ev) {
+    if (ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+    if (!PALETTES.length) return;
+    var i = PALETTES.findIndex(function (p) { return p.id === state.palette; });
+    i = (i + (ev.key === 'ArrowRight' ? 1 : -1) + PALETTES.length) % PALETTES.length;
+    state.palette = PALETTES[i].id; save(); render(); ev.preventDefault();
+  });
+
+  // Palette rail
+  var rail = document.getElementById('rail');
+  function renderRail() {
+    if (!PALETTES.length) { rail.innerHTML = '<div class="empty">No palettes loaded.</div>'; return; }
+    rail.innerHTML = PALETTES.map(function (p, i) {
+      var fl = p.flavours || {};
+      return '<button class="card" data-id="' + esc(p.id) + '" aria-pressed="' + (p.id === state.palette) + '">' +
+        '<div class="name"><b>' + esc(p.name) + '</b><span>' + esc(p.family) + '</span>' + (i === 0 ? '<span class="base">Baseline</span>' : '') + '</div>' +
+        '<div class="flav">' + esc(fl.light || 'Light') + ' &middot; ' + esc(fl.dark || 'Dark') + '</div>' +
+        '<div class="pitch">' + esc(p.pitch) + '</div>' +
+        '<div class="strips">' + stripHTML(p, 'light') + stripHTML(p, 'dark') + '</div></button>';
+    }).join('');
+  }
+  rail.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.card'); if (!b) return;
+    state.palette = b.getAttribute('data-id'); save(); render();
+  });
+
+  // Stage
+  var stage = document.getElementById('stage');
+  function renderStage() {
+    var p = byId(state.palette);
+    document.getElementById('stage-sub').textContent = p ? (p.name + ' — ' + (state.screen === 'review' ? 'Review' : 'Explore') + (state.mode === 'age' && state.screen !== 'review' ? ', coloured by age' : '')) : '';
+    stage.className = 'stage' + (state.appearance === 'both' ? ' both' : '');
+    if (!p) { stage.innerHTML = '<div class="empty">Nothing selected.</div>'; return; }
+    var apps = state.appearance === 'both' ? ['light', 'dark'] : [state.appearance];
+    stage.innerHTML = apps.map(function (a) {
+      var fl = (p.flavours || {})[a] || a;
+      return '<div><div class="shot" data-app="' + a + '"></div><div class="shot-cap">' + esc(fl) + ' &middot; ' + a + '</div></div>';
+    }).join('');
+    Array.prototype.forEach.call(stage.querySelectorAll('.shot'), function (el) {
+      var a = el.getAttribute('data-app');
+      if (state.screen === 'review') M.renderReview(el, p, a);
+      else M.renderExplore(el, p, a, { mode: state.mode });
+    });
+  }
+
+  // Glance grid
+  var glance = document.getElementById('glance');
+  function renderGlance() {
+    if (!PALETTES.length) { glance.innerHTML = ''; return; }
+    var apps = state.appearance === 'both' ? ['light', 'dark'] : [state.appearance];
+    glance.innerHTML = PALETTES.map(function (p) {
+      return '<button data-id="' + esc(p.id) + '" aria-pressed="' + (p.id === state.palette) + '">' +
+        '<div class="pair">' + apps.map(function (a) { return '<div class="mini" data-app="' + a + '"></div>'; }).join('') + '</div>' +
+        '<div class="cap"><b>' + esc(p.name) + '</b><span>' + esc(p.family) + '</span></div></button>';
+    }).join('');
+    Array.prototype.forEach.call(glance.querySelectorAll('button'), function (b) {
+      var p = byId(b.getAttribute('data-id'));
+      Array.prototype.forEach.call(b.querySelectorAll('.mini'), function (el) {
+        M.renderTreemapOnly(el, p, el.getAttribute('data-app'), { mode: state.mode });
+      });
+    });
+  }
+  glance.addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    state.palette = b.getAttribute('data-id'); save(); render();
+    document.getElementById('stage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Token sheet
+  var tokens = document.getElementById('tokens');
+  function swatch(v) {
+    return '<span class="sw"><i><b style="background:' + esc(v) + '"></b></i><code>' + esc(v) + '</code></span>';
+  }
+  function fillsHTML(arr) {
+    return '<span class="fills">' + (arr || []).map(function (c) { return '<i style="background:' + esc(c) + '" title="' + esc(c) + '"></i>'; }).join('') + '</span>';
+  }
+  function renderTokens() {
+    var p = byId(state.palette);
+    if (!p) { tokens.innerHTML = '<div class="empty">Nothing selected.</div>'; return; }
+    var L = modeOf(p, 'light'), D = modeOf(p, 'dark');
+    var keys = [];
+    Object.keys(L.ui || {}).concat(Object.keys(D.ui || {})).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+    var s = '<div class="tokens-head"><h3>' + esc(p.name) + '</h3><span class="sub" style="font-size:12px;color:var(--fg-2)">' + esc(p.family) + '</span>' +
+      '<button class="btn primary" id="copy-tokens">Copy tokens</button></div>';
+    var sh = p.shape || {};
+    s += '<div class="tok-group"><h4>Shape</h4><div style="font-size:11px;color:var(--fg-2);font-family:var(--mono)">' +
+      Object.keys(sh).map(function (k) { return esc(k) + ': ' + esc(JSON.stringify(sh[k])); }).join(' &middot; ') + '</div></div>';
+    s += '<div class="tok-group"><h4>UI</h4><div class="tok-cols"><span>token</span><span>light</span><span>dark</span></div><div class="tok-grid">';
+    keys.forEach(function (k) {
+      var lv = L.ui[k], dv = D.ui[k];
+      if (k === 'marked') {
+        ['fill', 'outline', 'text'].forEach(function (sub) {
+          s += '<div class="tok"><span class="k">marked.' + sub + '</span>' + swatch(lv ? lv[sub] : '') + swatch(dv ? dv[sub] : '') + '</div>';
+        });
+        return;
+      }
+      s += '<div class="tok"><span class="k">' + esc(k) + '</span>' + swatch(lv) + swatch(dv) + '</div>';
+    });
+    s += '</div></div>';
+    s += '<div class="tok-group"><h4>Categories: accent and fills depth 0 to 4</h4><div class="tok-cols"><span>category</span><span>light</span><span>dark</span></div>';
+    CATS.concat(['other']).forEach(function (k, i) {
+      var lc = (L.categories || {})[k] || {}, dc = (D.categories || {})[k] || {};
+      s += '<div class="catrow"><span class="k">' + esc(CAT_LABELS[i] || 'Other') + '</span>' +
+        '<span class="catcell">' + swatch(lc.accent || '') + fillsHTML(lc.fills) + (lc.text ? swatch(lc.text) : '') + '</span>' +
+        '<span class="catcell">' + swatch(dc.accent || '') + fillsHTML(dc.fills) + (dc.text ? swatch(dc.text) : '') + '</span></div>';
+    });
+    s += '</div>';
+    s += '<div class="tok-group"><h4>Age: swatch and fills depth 0 to 4</h4><div class="tok-cols"><span>bucket</span><span>light</span><span>dark</span></div>';
+    (M ? M.ageLabels : []).forEach(function (l, i) {
+      var la = L.age || { swatches: [], fills: [] }, da = D.age || { swatches: [], fills: [] };
+      s += '<div class="catrow"><span class="k">' + esc(l) + '</span>' +
+        '<span class="catcell">' + swatch(la.swatches[i] || '') + fillsHTML(la.fills[i]) + '</span>' +
+        '<span class="catcell">' + swatch(da.swatches[i] || '') + fillsHTML(da.fills[i]) + '</span></div>';
+    });
+    s += '</div>';
+    tokens.innerHTML = s;
+    document.getElementById('copy-tokens').addEventListener('click', function () {
+      var text = JSON.stringify(p, null, 2);
+      var done = function () { toast('Copied ' + p.name + ' tokens'); };
+      var fallback = function () {
+        var ta = document.getElementById('copy-fallback');
+        ta.value = text; ta.className = ''; ta.style.position = 'fixed'; ta.style.left = '16px'; ta.style.top = '16px';
+        ta.style.width = '320px'; ta.style.height = '200px'; ta.style.opacity = '1'; ta.style.zIndex = '60';
+        ta.focus(); ta.select();
+        try { if (document.execCommand('copy')) { done(); ta.className = 'copy-fallback'; ta.removeAttribute('style'); return; } } catch (e) { /* fall through */ }
+        toast('Press ⌘C to copy, then Esc');
+        ta.addEventListener('keydown', function h(ev) { if (ev.key === 'Escape') { ta.className = 'copy-fallback'; ta.removeAttribute('style'); ta.removeEventListener('keydown', h); } });
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else fallback();
+    });
+  }
+
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  function render() {
+    syncControls();
+    if (!M) {
+      stage.innerHTML = '<div class="empty">renderer.js did not load.</div>';
+      rail.innerHTML = ''; glance.innerHTML = ''; tokens.innerHTML = '';
+      return;
+    }
+    renderRail();
+    renderStage();
+    renderGlance();
+    renderTokens();
+  }
+  render();
+})();
+</script>

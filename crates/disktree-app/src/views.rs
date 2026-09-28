@@ -256,7 +256,7 @@ fn explore(
                         .flex_1()
                         .min_w_0()
                         .min_h_0()
-                        .child(trail_and_legend(app, &theme, cx))
+                        .child(trail_and_legend(app, &theme))
                         .child(
                             div()
                                 .flex()
@@ -330,7 +330,7 @@ fn title_band(theme: &Theme, window: &Window) -> Stateful<Div> {
         .pr(space::LG)
         .bg(theme.background)
         .border_b_1()
-        .border_color(theme.divider())
+        .border_color(theme.divider)
         .on_mouse_down(MouseButton::Left, |_, window, _| {
             window.start_window_move();
         })
@@ -983,11 +983,7 @@ fn view_settings(
 
 /// Where you are, as a clickable trail, and what the colours mean, on one
 /// row over the mosaic.
-fn trail_and_legend(
-    app: &Disktree,
-    theme: &Theme,
-    cx: &Context<'_, Disktree>,
-) -> Div {
+fn trail_and_legend(app: &Disktree, theme: &Theme) -> Div {
     let mut row = div()
         .flex()
         .flex_row()
@@ -999,7 +995,7 @@ fn trail_and_legend(
     if app.find_open || !app.find.is_empty() {
         row = row.child(find_field(app, theme));
     }
-    row.child(div().flex_1()).child(legend(app, theme, cx))
+    row.child(div().flex_1()).child(legend(app, theme))
 }
 
 /// What the whole scan found, as one quiet line. What the privacy
@@ -1052,7 +1048,7 @@ fn scan_totals(app: &Disktree, theme: &Theme) -> Div {
 
 /// The key to the colours: the categories, or the age ramp in age mode.
 /// Clipped from the trailing end when the row runs out of room.
-fn legend(app: &Disktree, theme: &Theme, cx: &App) -> Div {
+fn legend(app: &Disktree, theme: &Theme) -> Div {
     let item = |swatch: Div, label: &'static str| {
         div()
             .flex()
@@ -1091,7 +1087,7 @@ fn legend(app: &Disktree, theme: &Theme, cx: &App) -> Div {
         }
     }
     let ground = palette::category_fill(theme, Category::Other, 0);
-    let hatch = cx.theme().bright.opacity(0.5);
+    let hatch = palette::hatch(theme);
     div()
         .flex()
         .flex_row()
@@ -1112,7 +1108,7 @@ fn side_panel(
     theme: &Theme,
     cx: &Context<'_, Disktree>,
 ) -> Div {
-    let rule = || div().h(px(1.)).bg(theme.divider());
+    let rule = || div().h(px(1.)).bg(theme.divider);
     // A hairline to look at, a wider strip to grab; double-click resets.
     let handle = div()
         .id("panel-handle")
@@ -1142,8 +1138,8 @@ fn side_panel(
         .px(space::LG)
         .py(space::LG)
         .border_l_1()
-        .border_color(theme.divider())
-        .bg(theme.surface)
+        .border_color(theme.divider)
+        .bg(theme.sidebar)
         .child(handle)
         .child(selection_section(app, theme, cx))
         .child(rule())
@@ -1884,7 +1880,7 @@ fn disk_section(
             .relative()
             .w_full()
             .h(space::SM)
-            .bg(theme.foreground.opacity(0.08))
+            .bg(theme.meter_track)
             .child(
                 div()
                     .absolute()
@@ -1892,7 +1888,7 @@ fn disk_section(
                     .top_0()
                     .h_full()
                     .w(relative(used_after))
-                    .bg(theme.foreground.opacity(0.28)),
+                    .bg(theme.meter_used),
             )
             .child(
                 div()
@@ -2028,7 +2024,7 @@ fn key_bar(app: &Disktree, theme: &Theme, cx: &App) -> Div {
         .px(space::LG)
         .py(space::XS)
         .border_t_1()
-        .border_color(theme.divider())
+        .border_color(theme.divider)
         .child(lane);
     if (app.view.scale - 1.0).abs() > 0.01 {
         row = row.child(
@@ -2380,7 +2376,7 @@ fn mark_row(
         .px(space::MD)
         .py(space::SM)
         .border_b_1()
-        .border_color(theme.divider())
+        .border_color(theme.divider)
         .child(
             icon(if item.is_dir {
                 IconName::FolderOpen
@@ -2652,7 +2648,7 @@ fn review_footer(app: &Disktree, theme: &Theme, cx: &App) -> Div {
         .px(space::LG)
         .py(space::SM)
         .border_t_1()
-        .border_color(theme.divider())
+        .border_color(theme.divider)
         .child(widgets::hint("enter", commit, cx))
         .child(widgets::hint("m", "Trash", cx))
         .child(widgets::hint("p", "permanent", cx))
@@ -2788,7 +2784,7 @@ fn running(
                 .px(space::LG)
                 .py(space::SM)
                 .border_t_1()
-                .border_color(theme.divider())
+                .border_color(theme.divider)
                 .child(widgets::hint("esc", "stop after the current item", cx)),
         )
 }
@@ -2916,7 +2912,7 @@ fn done(
                 .px(space::LG)
                 .py(space::SM)
                 .border_t_1()
-                .border_color(theme.divider())
+                .border_color(theme.divider)
                 .child(
                     // An acknowledgement: the result is already on screen.
                     button("continue", "Done", ButtonVariant::Primary, cx)

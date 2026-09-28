@@ -1,23 +1,25 @@
 //! The app's palette, and its projection into gpui-base.
 //!
-//! Two palettes, one per system appearance, built from the colours macOS
-//! draws its own windows with, so the app sits beside Finder rather than
-//! beside a terminal. Which one is active follows the system: [`init`]
-//! picks by the platform's appearance, and `main` re-applies on every change
-//! the window reports.
+//! A theme is a [`ThemeId`]: one style drawn as a light and a dark palette,
+//! the Catppuccin styles with a choice of dark [`Flavour`]. The palettes
+//! themselves are tables in [`crate::themes`], generated and checked in
+//! `design/palettes`; [`Theme::resolve`] reads the one a [`ThemeChoice`]
+//! names and turns its colours into the tokens the views draw with. Which
+//! half is on screen follows the [`AppearanceChoice`]: the system's
+//! appearance by default, and `main` re-applies on every change the window
+//! reports.
 //!
-//! The one deliberate departure from the system palette is amber: the
-//! treemap uses `warning` as its single highlight (selection, the main
-//! action, reclaimable space), so both palettes keep it the system's orange
-//! rather than muting it into a caution tint.
+//! Every palette keeps one strong colour apart, the highlight: the treemap
+//! uses it for the selection, the main action and reclaimable space, and
+//! for nothing else, so the eye goes straight to it.
 
 use gpui_kit::base::actions::{Confirm, SelectLeft, SelectRight};
 use gpui_kit::base::{ColorTokens, RadiusTokens, ThemeAppearance};
 use gpui_kit::{
-    App, Global, Hsla, KeyBinding, SharedString, WindowAppearance, px, rgb,
-    rgba,
+    App, Global, Hsla, KeyBinding, SharedString, WindowAppearance, px, rgba,
 };
 
+use crate::themes;
 use crate::ui::{BASE_REM, radius, text};
 
 /// The face the whole interface is set in: the system font on macOS.
@@ -215,14 +217,19 @@ pub fn refresh(window: WindowAppearance, cx: &mut App) {
     Theme::resolve(choice, choice.appearance.resolve(window)).apply(cx);
 }
 
+/// The colours and tile geometry on screen: one half of a [`ThemeId`],
+/// resolved from the tables in [`themes`].
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Theme {
+    /// The theme and the half: "Catppuccin Frappé", "Aqua Dark".
     pub name: SharedString,
     pub appearance: ThemeAppearance,
     /// Window chrome: the panel, the bars, the review summary.
     pub background: Hsla,
     /// A raised sheet: menus, dialogs, the help overlay.
     pub surface: Hsla,
+    /// The side panel.
+    pub sidebar: Hsla,
     /// A sunken well: the treemap canvas, scrolling lists, key caps.
     pub inset: Hsla,
     pub foreground: Hsla,
@@ -232,71 +239,87 @@ pub struct Theme {
     pub on_accent: Hsla,
     pub selection: Hsla,
     pub border: Hsla,
+    /// A rule between regions of the chrome.
+    pub divider: Hsla,
+    /// The resting fill of a control.
+    pub fill: Hsla,
+    /// The one strong colour: selection, the main action, what can be had
+    /// back.
+    pub highlight: Hsla,
+    pub on_highlight: Hsla,
     pub danger: Hsla,
     pub warning: Hsla,
     pub success: Hsla,
+    /// The diagonal hatch over reclaimable space.
+    pub hatch: Hsla,
+    /// The outline of the tile under the pointer.
+    pub hover: Hsla,
+    /// A tile's name on its fill, and the dimmer size beside it.
+    pub label: Hsla,
+    pub label_dim: Hsla,
+    /// A tile marked for removal: its fill, its ring, its name.
+    pub marked_fill: Hsla,
+    pub marked_outline: Hsla,
+    pub marked_text: Hsla,
+    /// The disk meter: the whole volume, and the part in use.
+    pub meter_track: Hsla,
+    pub meter_used: Hsla,
+    /// The category and age fills, read by [`crate::palette`].
+    pub tiles: &'static themes::Palette,
+    /// The tile geometry: corners, gaps, the strip, the sheen.
+    pub shape: &'static themes::Shape,
     pub font: SharedString,
     pub mono: SharedString,
 }
 impl Global for Theme {}
 
 impl Theme {
-    /// The system light appearance: a grey window around white content.
-    pub fn light() -> Self {
-        Self {
-            name: "macOS Light".into(),
-            appearance: ThemeAppearance::Light,
-            background: rgb(0xec_ec_ec).into(),
-            surface: rgb(0xff_ff_ff).into(),
-            inset: rgb(0xf6_f6_f6).into(),
-            // Label colours are translucent black, as AppKit's are, so text
-            // keeps its weight over the tinted surfaces it lands on.
-            foreground: rgba(0x00_00_00_d9).into(),
-            secondary: rgb(0x6e_6e_73).into(),
-            bright: rgb(0x00_00_00).into(),
-            accent: rgb(0x00_7a_ff).into(),
-            on_accent: rgb(0xff_ff_ff).into(),
-            selection: rgba(0x00_7a_ff_2e).into(),
-            border: rgb(0xd1_d1_d6).into(),
-            danger: rgb(0xff_3b_30).into(),
-            warning: rgb(0xff_95_00).into(),
-            success: rgb(0x34_c7_59).into(),
-            font: SYSTEM_FONT.into(),
-            mono: MONO_FONT.into(),
-        }
-    }
-
-    /// The system dark appearance: a near-black window, content one step up.
-    pub fn dark() -> Self {
-        Self {
-            name: "macOS Dark".into(),
-            appearance: ThemeAppearance::Dark,
-            background: rgb(0x1e_1e_1e).into(),
-            surface: rgb(0x2a_2a_2a).into(),
-            inset: rgb(0x23_23_23).into(),
-            foreground: rgba(0xff_ff_ff_d9).into(),
-            secondary: rgb(0x98_98_9d).into(),
-            bright: rgb(0xff_ff_ff).into(),
-            accent: rgb(0x0a_84_ff).into(),
-            on_accent: rgb(0xff_ff_ff).into(),
-            selection: rgba(0x0a_84_ff_47).into(),
-            border: rgb(0x3a_3a_3c).into(),
-            danger: rgb(0xff_45_3a).into(),
-            warning: rgb(0xff_9f_0a).into(),
-            success: rgb(0x30_d1_58).into(),
-            font: SYSTEM_FONT.into(),
-            mono: MONO_FONT.into(),
-        }
-    }
-
     /// The palette `choice` draws in `appearance`.
-    // Placeholder until the theme table lands: every theme is still the
-    // system palette.
     pub fn resolve(choice: ThemeChoice, appearance: ThemeAppearance) -> Self {
-        let _ = choice;
-        match appearance {
-            ThemeAppearance::Light => Self::light(),
-            ThemeAppearance::Dark => Self::dark(),
+        let tiles = themes::palette(choice.theme, choice.flavour, appearance);
+        let ui = &tiles.ui;
+        let hsla = |color: themes::Color| Hsla::from(rgba(color));
+        let accent = hsla(ui.accent);
+        // The selection tint is the accent seen through the text it sits
+        // behind; a dark canvas needs more of it to show at all.
+        let selection = match appearance {
+            ThemeAppearance::Light => accent.opacity(0.18),
+            ThemeAppearance::Dark => accent.opacity(0.28),
+        };
+        Self {
+            name: format!("{} {}", choice.theme.name(), tiles.name).into(),
+            appearance,
+            background: hsla(ui.background),
+            surface: hsla(ui.surface),
+            sidebar: hsla(ui.sidebar),
+            inset: hsla(ui.inset),
+            foreground: hsla(ui.foreground),
+            secondary: hsla(ui.secondary),
+            bright: hsla(ui.bright),
+            accent,
+            on_accent: hsla(ui.on_accent),
+            selection,
+            border: hsla(ui.border),
+            divider: hsla(ui.divider),
+            fill: hsla(ui.fill),
+            highlight: hsla(ui.highlight),
+            on_highlight: hsla(ui.on_highlight),
+            danger: hsla(ui.danger),
+            warning: hsla(ui.warning),
+            success: hsla(ui.success),
+            hatch: hsla(ui.hatch),
+            hover: hsla(ui.hover),
+            label: hsla(ui.label),
+            label_dim: hsla(ui.label_dim),
+            marked_fill: hsla(ui.marked_fill),
+            marked_outline: hsla(ui.marked_outline),
+            marked_text: hsla(ui.marked_text),
+            meter_track: hsla(ui.meter_track),
+            meter_used: hsla(ui.meter_used),
+            tiles,
+            shape: themes::shape(choice.theme),
+            font: SYSTEM_FONT.into(),
+            mono: MONO_FONT.into(),
         }
     }
 
@@ -306,10 +329,11 @@ impl Theme {
         self.foreground.opacity(0.)
     }
 
-    /// Shared control colours, all tints of the label colour so they read
-    /// the same way over either window background.
-    pub fn normal_fill(&self) -> Hsla {
-        self.foreground.opacity(0.04)
+    /// Shared control colours: the resting fill is the palette's own, the
+    /// rest are tints of the label colour so they read the same way over
+    /// either window background.
+    pub const fn normal_fill(&self) -> Hsla {
+        self.fill
     }
     pub fn hover_fill(&self) -> Hsla {
         self.foreground.opacity(0.08)
@@ -325,9 +349,6 @@ impl Theme {
     }
     pub fn focus_border(&self) -> Hsla {
         self.foreground.opacity(0.25)
-    }
-    pub fn divider(&self) -> Hsla {
-        self.foreground.opacity(0.12)
     }
 
     /// The palette as gpui-base sees it, so base's own dialogs and tooltips

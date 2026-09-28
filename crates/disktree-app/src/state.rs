@@ -10,6 +10,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use disktree_core::classify::Category;
 use disktree_core::filter::{Keep, Matches, filter};
 use disktree_core::insights::{Candidate, worth_a_look};
 use disktree_core::removal::{
@@ -36,6 +37,7 @@ use crate::controls::Status;
 use crate::git::GitState;
 
 use crate::marks::{Marks, display_path, is_hidden};
+use crate::theme::ActiveTheme as _;
 use crate::treemap_view::{Mosaic, TileDeco};
 
 /// What a tile's colour says.
@@ -66,7 +68,7 @@ pub struct Sibling {
     pub index: usize,
     pub name: String,
     pub value: u64,
-    pub category: disktree_core::classify::Category,
+    pub category: Category,
     pub is_dir: bool,
 }
 
@@ -1559,6 +1561,7 @@ impl Disktree {
                         depth: tile.depth,
                         dim: filtered == Filtered::Out,
                         marked: is_marked || is_covered,
+                        category: age_bucket.is_none().then_some(category),
                         size_text: crate::widgets::short_value(node, metric),
                     });
                 }
@@ -1569,6 +1572,7 @@ impl Disktree {
                     depth: tile.depth,
                     dim: self.matches.is_some(),
                     marked: false,
+                    category: Some(category),
                     size_text: String::new(),
                 }),
             }
@@ -2624,6 +2628,9 @@ pub struct Label {
     /// Filtered out while typing: drawn quietly.
     pub dim: bool,
     pub marked: bool,
+    /// The category whose fill it sits on, when the fill is a category's:
+    /// a palette may set its own ink for those. `None` over an age fill.
+    pub category: Option<Category>,
     pub size_text: String,
 }
 
@@ -2692,6 +2699,12 @@ impl Render for Disktree {
         cx: &mut Context<'_, Self>,
     ) -> impl gpui_kit::IntoElement {
         self.rem = window.rem_size().as_f32();
+        // The gaps between tiles are the theme's. Layout insets each tile
+        // by the padding, so a gap is two paddings; a new theme changes the
+        // options, which are part of the layout key, so the cache follows.
+        let shape = cx.theme().shape;
+        self.layout_options.padding_outer = f32::from(shape.gap_top) / 2.0;
+        self.layout_options.padding = f32::from(shape.gap_deep) / 2.0;
         self.tick_transition(window);
         crate::views::root(self, window, cx)
     }
