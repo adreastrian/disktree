@@ -9,7 +9,7 @@
 //!
 //! The theme items are the exception: they carry their choice with them
 //! and are answered here, at the app level, so they work from whichever
-//! window is in front, including Settings. The menu bar is static once
+//! window is in front. The menu bar is static once
 //! set, so [`sync`] sets it again whenever the choice changes and the
 //! check marks follow.
 
@@ -92,13 +92,8 @@ pub fn bind_keys(cx: &mut App) {
         KeyBinding::new("cmd-f", FocusFind, None),
         KeyBinding::new("cmd-/", ShowHelp, None),
         KeyBinding::new("cmd-?", ShowHelp, None),
-        // Settings is a sheet-like window: Escape closes it, as it does
-        // a dialog. The treemap keeps its own Escape.
-        KeyBinding::new(
-            "escape",
-            CloseWindow,
-            Some(crate::settings_view::CONTEXT),
-        ),
+        // The Settings sheet walks its controls with Tab; Escape is the
+        // dialog's own, bound by gpui-base.
         KeyBinding::new(
             "tab",
             crate::settings_view::NextControl,
@@ -179,15 +174,12 @@ pub fn sync(cx: &App) {
 
 /// Install the keymap, the menu bar and the app-level handlers.
 ///
-/// Quit, Settings and the theme items have no window to land in, so they
-/// are handled here; everything else is answered by the window's root
-/// element, which has the state in hand.
+/// Quit and the theme items have no window to land in, so they are
+/// handled here; everything else, Settings included, is answered by the
+/// window's root element, which has the state in hand.
 pub fn init(cx: &mut App) {
     bind_keys(cx);
     cx.on_action(|_: &Quit, cx| cx.quit());
-    cx.on_action(|_: &OpenSettings, cx| {
-        crate::settings_view::open(cx);
-    });
     cx.on_action(|action: &SelectTheme, cx| {
         let choice = ThemeChoice {
             theme: action.0,

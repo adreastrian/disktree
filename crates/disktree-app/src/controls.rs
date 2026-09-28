@@ -12,14 +12,14 @@ use std::time::Duration;
 use gpui_kit::base::actions::{Confirm, SelectLeft, SelectRight};
 use gpui_kit::base::{
     AlertDialog, ButtonStyles, Checkbox, CheckboxIndicator, CheckboxState,
-    DialogBackdrop, DialogDescription, DialogPopup, DialogTitle, Radio,
+    Dialog, DialogBackdrop, DialogDescription, DialogPopup, DialogTitle, Radio,
     RadioGroup, StyledExt as _, Tooltip,
 };
 use gpui_kit::prelude::*;
 use gpui_kit::{
     AnyElement, App, ClickEvent, Context, Div, ElementId, Entity, FocusHandle,
     FontWeight, InteractiveElement, Interactivity, IntoElement, MouseButton,
-    ParentElement, Render, RenderOnce, SharedString,
+    ParentElement, Rems, Render, RenderOnce, SharedString,
     StatefulInteractiveElement, StyleRefinement, Styled, Window, div, rems,
     rgb, svg,
 };
@@ -315,6 +315,9 @@ struct Cursor {
     focus: FocusHandle,
     index: Option<usize>,
     was_focused: bool,
+    /// The choice the group was last drawn with, so the cursor can follow
+    /// a change made elsewhere: a click on another option, or a menu.
+    selected: Option<usize>,
 }
 
 /// A single-choice setting as a segmented control: one keyboard stop for
@@ -411,18 +414,20 @@ pub fn button_group(
 /// A single choice among pictures: one card per item, its picture over its
 /// label, the chosen one ringed in the accent. The keyboard works as it
 /// does in [`button_group`]: one stop for the group, Left/Right to move,
-/// Return/Space to commit. `pictures` pairs with `items` by index.
+/// Return/Space to commit. Each card is an item with its picture; every
+/// card is `width` wide, so a row of them lines up whatever is drawn on
+/// them.
 pub fn card_group(
     id: impl Into<ElementId>,
-    items: Vec<ChoiceItem>,
-    pictures: Vec<AnyElement>,
+    cards: Vec<(ChoiceItem, AnyElement)>,
+    width: Rems,
     selected: Option<usize>,
     on_change: impl Fn(usize, &mut Window, &mut App) + 'static,
     window: &mut Window,
     cx: &mut App,
 ) -> RadioGroup {
-    debug_assert_eq!(items.len(), pictures.len());
     let id = id.into();
+    let (items, pictures): (Vec<_>, Vec<_>) = cards.into_iter().unzip();
     let cursor = cursor(&id, &items, selected, window, cx);
     let on_change: Change = Rc::new(move |index, window, cx| {
         if selected != Some(index) {
@@ -452,7 +457,7 @@ pub fn card_group(
                 .flex_col()
                 .items_center()
                 .gap(space::XS)
-                .w(size::THEME_CARD)
+                .w(width)
                 .p(space::SM)
                 // Two hairlines, so the ring reads as a ring and not as a
                 // border that happens to be coloured.
@@ -514,18 +519,47 @@ fn cursor(
             focus: cx.focus_handle(),
             index: initial,
             was_focused: false,
+            selected,
         });
     cursor.update(cx, |state, _| {
         let focused = state.focus.is_focused(window);
-        // Arriving by Tab lands the cursor on the current choice; a stale
-        // cursor (the option it pointed at got disabled) resets too.
-        if (focused && !state.was_focused) || !state.index.is_some_and(enabled)
+        // Arriving by Tab lands the cursor on the current choice, and so
+        // does a choice made by a click or a menu while the group keeps
+        // focus, or the arrows would set off from where they last were; a
+        // stale cursor (the option it pointed at got disabled) resets too.
+        if (focused && !state.was_focused)
+            || state.selected != selected
+            || !state.index.is_some_and(enabled)
         {
             state.index = initial;
         }
         state.was_focused = focused;
+        state.selected = selected;
     });
     cursor
+}
+
+/// The keyboard stop of the choice group with this `id`, for whoever has to
+/// put focus on it before the group has been drawn: a sheet that opens on
+/// its first control. Read at render time, where the group is built, so
+/// the state is the group's own.
+pub fn choice_focus(
+    id: impl Into<ElementId>,
+    window: &mut Window,
+    cx: &mut App,
+) -> FocusHandle {
+    // An empty cursor: `cursor` lands it on the current choice as soon as
+    // the group is built.
+    window
+        .use_keyed_state((id.into(), "cursor"), cx, |_, cx| Cursor {
+            focus: cx.focus_handle(),
+            index: None,
+            was_focused: false,
+            selected: None,
+        })
+        .read(cx)
+        .focus
+        .clone()
 }
 
 fn navigate<T: StatefulInteractiveElement + FluentBuilder>(
@@ -604,6 +638,18 @@ pub fn alert_dialog(focus: &FocusHandle, cx: &mut App) -> AlertDialog {
     AlertDialog::new(cx)
         .focus_handle(focus.clone())
         .backdrop(dialog_backdrop())
+}
+
+/// A sheet: a panel over the window that is not a question. Escape, a
+/// press on the backdrop and its own close button all dismiss it; the
+/// caller closes it in `on_cancel`. The host centres its child.
+pub fn sheet_dialog(focus: &FocusHandle, cx: &mut App) -> Dialog {
+    Dialog::new(cx)
+        .focus_handle(focus.clone())
+        .backdrop(dialog_backdrop())
+        .flex()
+        .items_center()
+        .justify_center()
 }
 
 fn dialog_backdrop() -> DialogBackdrop {

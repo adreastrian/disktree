@@ -1630,7 +1630,7 @@ fn marking_a_directory_marks_everything_inside_it(cx: &mut TestAppContext) {
 }
 
 // ---------------------------------------------------------------------------
-// Settings: the window, the theme choice, and the View ▸ Theme menu.
+// Settings: the sheet, the theme choice, and the View ▸ Theme menu.
 
 /// What `main` sets up for Settings on top of [`init`]: the app-level
 /// handlers the theme actions land in, and the menu bar. No settings file
@@ -1641,33 +1641,56 @@ fn init_settings(cx: &mut App) {
     crate::menu::init(cx);
 }
 
-/// Open the Settings window the way `⌘ ,` does, and drive it.
-fn settings_window(
-    cx: &mut TestAppContext,
-) -> (Entity<crate::settings_view::SettingsWindow>, &mut Window) {
-    let handle = cx.update(crate::settings_view::open);
-    let view = handle.root(cx).expect("the settings view");
-    let cx = VisualTestContext::from_window(*handle, cx).into_mut();
-    cx.run_until_parked();
-    (view, cx)
+/// The Settings sheet is open, by the state and by the frame just drawn.
+fn settings_shown(view: &Entity<Disktree>, cx: &mut Window) -> bool {
+    let open = read(view, cx, |app| app.settings_open);
+    assert_eq!(
+        open,
+        cx.debug_bounds("disktree-settings").is_some(),
+        "the frame shows what the state says"
+    );
+    open
 }
 
-/// The debug selector of a theme card.
-fn card_selector(id: crate::theme::ThemeId) -> &'static str {
+/// The debug selector of a card in the sheet: `settings-theme-aqua`.
+fn card_selector(group: &str, key: &str) -> &'static str {
     // `debug_bounds` wants a static name; a test leaks a few bytes.
-    Box::leak(format!("settings-theme-{}", id.key()).into_boxed_str())
+    Box::leak(format!("settings-{group}-{key}").into_boxed_str())
 }
 
-/// Every theme draws in every appearance, with every card on screen, and
-/// the flavour row is there only for a Catppuccin style.
+/// Whether the sheet's focus handle contains the window's focus.
+fn in_sheet(view: &Entity<Disktree>, cx: &mut Window) -> bool {
+    let focus = read(view, cx, |app| app.settings_focus.clone());
+    cx.update(|window, cx| focus.contains_focused(window, cx))
+}
+
+/// Whether the treemap root has the keyboard.
+fn on_treemap(view: &Entity<Disktree>, cx: &mut Window) -> bool {
+    let focus = read(view, cx, |app| app.focus.clone());
+    cx.update(|window, _| focus.is_focused(window))
+}
+
+/// `⌘ ,` opens the sheet in the treemap's own window, and every theme
+/// draws in every appearance with every card on screen; the flavour
+/// section is there only for a Catppuccin style. At the smallest window
+/// `main` allows, the panel still fits inside.
 #[gpui_kit::test]
-fn the_settings_window_draws_every_theme_and_appearance(
+fn the_settings_sheet_draws_every_theme_and_appearance(
     cx: &mut TestAppContext,
 ) {
-    use crate::theme::{AppearanceChoice, ThemeChoice, ThemeId};
+    use crate::theme::{AppearanceChoice, Flavour, ThemeChoice, ThemeId};
 
     cx.update(init_settings);
-    let (_, cx) = settings_window(cx);
+    let temp = fixture();
+    let (view, cx) = view_over(temp.path(), cx);
+    cx.simulate_resize(gpui_kit::size(px(900.), px(600.)));
+    draw(cx);
+    assert_eq!(cx.windows().len(), 1);
+
+    press(cx, "cmd-,");
+    assert!(settings_shown(&view, cx), "⌘ , opened the sheet");
+    assert_eq!(cx.windows().len(), 1, "in the same window");
+
     for theme in ThemeId::ALL {
         for appearance in AppearanceChoice::ALL {
             let choice = ThemeChoice {
@@ -1677,18 +1700,34 @@ fn the_settings_window_draws_every_theme_and_appearance(
             };
             cx.update(|_, cx| crate::settings::choose(choice, cx));
             draw(cx);
+            let panel = cx
+                .debug_bounds("disktree-settings")
+                .unwrap_or_else(|| panic!("{theme:?} in {appearance:?}"));
             assert!(
-                cx.debug_bounds("disktree-settings").is_some(),
-                "{theme:?} in {appearance:?}"
+                panel.top() >= px(0.)
+                    && panel.left() >= px(0.)
+                    && panel.bottom() <= px(600.)
+                    && panel.right() <= px(900.),
+                "{theme:?} in {appearance:?}: {panel:?} fits the window"
             );
-            assert_eq!(
-                cx.debug_bounds("settings-flavour-mocha").is_some(),
-                theme.has_flavours(),
-                "{theme:?} shows the flavour row only if it has flavours"
-            );
+            for flavour in Flavour::ALL {
+                assert_eq!(
+                    cx.debug_bounds(card_selector("flavour", flavour.key()))
+                        .is_some(),
+                    theme.has_flavours(),
+                    "{theme:?} shows the flavours only if it has them"
+                );
+            }
+            for choice in AppearanceChoice::ALL {
+                assert!(
+                    cx.debug_bounds(card_selector("appearance", choice.key()))
+                        .is_some(),
+                    "{theme:?} in {appearance:?} draws the {choice:?} card"
+                );
+            }
             for id in ThemeId::ALL {
                 assert!(
-                    cx.debug_bounds(card_selector(id)).is_some(),
+                    cx.debug_bounds(card_selector("theme", id.key())).is_some(),
                     "{theme:?} in {appearance:?} draws the {id:?} card"
                 );
             }
@@ -1696,30 +1735,105 @@ fn the_settings_window_draws_every_theme_and_appearance(
     }
 }
 
-/// Clicking a theme card changes the choice and installs its palette,
-/// live; the keyboard reaches the cards too; and the flavour row comes
-/// and goes with the theme.
+/// While the sheet is open it owns the keyboard: the treemap's keys do
+/// nothing underneath, and focus is inside the sheet. `⌘ ,` again,
+/// Escape, a press on the backdrop and the close button each close it
+/// and hand the keyboard back to the treemap.
 #[gpui_kit::test]
-fn choosing_a_theme_card_applies_it(cx: &mut TestAppContext) {
+fn the_settings_sheet_owns_the_keyboard_and_closes_four_ways(
+    cx: &mut TestAppContext,
+) {
+    cx.update(init_settings);
+    let temp = fixture();
+    let (view, cx) = view_over(temp.path(), cx);
+    draw(cx);
+    assert!(on_treemap(&view, cx));
+
+    // Open: focus moves into the sheet, and space marks nothing.
+    let crumbs = read(&view, cx, |app| app.crumbs.clone());
+    press(cx, "cmd-,");
+    assert!(settings_shown(&view, cx));
+    assert!(in_sheet(&view, cx), "focus moved into the sheet");
+    assert!(!on_treemap(&view, cx));
+    press(cx, "space");
+    assert!(
+        read(&view, cx, |app| app.marks.is_empty()),
+        "space is spent"
+    );
+    press(cx, "enter");
+    assert!(settings_shown(&view, cx), "enter neither opens nor closes");
+    assert_eq!(
+        read(&view, cx, |app| app.crumbs.clone()),
+        crumbs,
+        "enter did not open a directory underneath"
+    );
+
+    // ⌘ , again.
+    press(cx, "cmd-,");
+    assert!(!settings_shown(&view, cx), "⌘ , closed the sheet");
+    assert!(on_treemap(&view, cx), "the treemap has the keyboard again");
+    assert_eq!(cx.windows().len(), 1);
+
+    // Escape.
+    press(cx, "cmd-,");
+    assert!(settings_shown(&view, cx));
+    press(cx, "escape");
+    assert!(!settings_shown(&view, cx), "Escape closed the sheet");
+    assert!(on_treemap(&view, cx));
+
+    // The backdrop: a press outside the panel.
+    press(cx, "cmd-,");
+    let panel = cx.debug_bounds("disktree-settings").expect("the panel");
+    let outside = Point::new(panel.left() / 2., panel.center().y);
+    cx.simulate_click(outside, Modifiers::default());
+    draw(cx);
+    assert!(!settings_shown(&view, cx), "the backdrop closed the sheet");
+    assert!(on_treemap(&view, cx));
+
+    // A press on the panel itself is not a press on the backdrop.
+    press(cx, "cmd-,");
+    let panel = cx.debug_bounds("disktree-settings").expect("the panel");
+    cx.simulate_click(
+        Point::new(panel.center().x, panel.top() + px(4.)),
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert!(settings_shown(&view, cx), "the panel's edge keeps it open");
+
+    // The close button.
+    let close = cx.debug_bounds("settings-close").expect("the close button");
+    cx.simulate_click(close.center(), Modifiers::default());
+    draw(cx);
+    assert!(!settings_shown(&view, cx), "the close button closed it");
+    assert!(on_treemap(&view, cx));
+}
+
+/// Clicking an appearance, theme or flavour card changes the choice and
+/// installs its palette, live; Tab cycles the sheet's controls and the
+/// arrows reach the cards; and the flavour section comes and goes with
+/// the theme.
+#[gpui_kit::test]
+fn choosing_in_the_settings_sheet_applies_it(cx: &mut TestAppContext) {
     use crate::theme::{AppearanceChoice, Flavour, ThemeChoice, ThemeId};
     use gpui_kit::WindowAppearance;
     use gpui_kit::base::ThemeAppearance;
 
     cx.update(init_settings);
-    let (view, cx) = settings_window(cx);
-    draw(cx);
+    let temp = fixture();
+    let (view, cx) = view_over(temp.path(), cx);
+    press(cx, "cmd-,");
+    assert!(settings_shown(&view, cx));
     assert_eq!(
-        cx.update(|_, cx| crate::theme::choice(cx).theme),
-        ThemeId::Catppuccin
+        cx.update(|_, cx| crate::theme::choice(cx)),
+        ThemeChoice::default()
     );
     assert!(cx.debug_bounds("settings-flavour-mocha").is_some());
 
     let card = cx
-        .debug_bounds(card_selector(ThemeId::Aqua))
+        .debug_bounds(card_selector("theme", ThemeId::Aqua.key()))
         .expect("the Aqua card");
     cx.simulate_click(card.center(), Modifiers::default());
     draw(cx);
-
     let choice = cx.update(|_, cx| crate::theme::choice(cx));
     assert_eq!(choice.theme, ThemeId::Aqua);
     assert!(
@@ -1739,20 +1853,36 @@ fn choosing_a_theme_card_applies_it(cx: &mut TestAppContext) {
         assert_eq!(installed.background, resolved.background);
     });
 
-    // The keyboard reaches the same choice: from the window's own focus,
-    // Tab lands on the appearance group, Tab again on the cards, Left
-    // moves from Aqua to Catppuccin Quiet, and Return commits.
-    let focus = view.read_with(cx, |this, _| this.focus.clone());
-    cx.update(|window, cx| window.focus(&focus, cx));
-    draw(cx);
-    press(cx, "tab tab left enter");
+    // The keyboard reaches the same choice: the click left the theme
+    // cards focused, Left moves from Aqua to Catppuccin Quiet, and Return
+    // commits.
+    press(cx, "left enter");
     let choice = cx.update(|_, cx| crate::theme::choice(cx));
     assert_eq!(choice.theme, ThemeId::CatppuccinQuiet);
     assert!(cx.debug_bounds("settings-flavour-mocha").is_some());
 
-    // Appearance and flavour go the same way, through their actions.
-    cx.dispatch_action(crate::menu::SelectAppearance(AppearanceChoice::Dark));
-    cx.dispatch_action(crate::menu::SelectFlavour(Flavour::Mocha));
+    // Tab keeps cycling inside the sheet: the flavours, the close button,
+    // and round to the appearance cards, never the treemap's own stops.
+    for _ in 0..6 {
+        press(cx, "tab");
+        assert!(in_sheet(&view, cx), "Tab stays in the sheet");
+    }
+    for _ in 0..6 {
+        press(cx, "shift-tab");
+        assert!(in_sheet(&view, cx), "Shift-Tab stays in the sheet");
+    }
+
+    // A flavour card, and an appearance card.
+    let mocha = cx
+        .debug_bounds("settings-flavour-mocha")
+        .expect("the Mocha card");
+    cx.simulate_click(mocha.center(), Modifiers::default());
+    draw(cx);
+    let dark = cx
+        .debug_bounds("settings-appearance-dark")
+        .expect("the Dark card");
+    cx.simulate_click(dark.center(), Modifiers::default());
+    draw(cx);
     let choice = cx.update(|_, cx| crate::theme::choice(cx));
     assert_eq!(
         choice,
@@ -1763,41 +1893,14 @@ fn choosing_a_theme_card_applies_it(cx: &mut TestAppContext) {
         }
     );
     cx.update(|_, cx| {
-        assert_eq!(cx.global::<Theme>().appearance, ThemeAppearance::Dark);
+        let installed = cx.global::<Theme>();
+        assert_eq!(installed.appearance, ThemeAppearance::Dark);
+        assert_eq!(
+            installed.background,
+            Theme::resolve(choice, ThemeAppearance::Dark).background
+        );
     });
-}
-
-/// `⌘ ,` opens one Settings window and a second `⌘ ,` brings that one
-/// forward; Escape and `⌘ W` close it and the treemap window stays.
-#[gpui_kit::test]
-fn settings_opens_once_and_escape_closes_it(cx: &mut TestAppContext) {
-    cx.update(init_settings);
-    let temp = fixture();
-    let (_, main) = view_over(temp.path(), cx);
-    draw(main);
-    assert_eq!(main.windows().len(), 1);
-
-    main.dispatch_action(crate::menu::OpenSettings);
-    assert_eq!(main.windows().len(), 2, "Settings opened");
-    let settings = main.update(|_, cx| crate::settings_view::open(cx));
-    assert_eq!(main.windows().len(), 2, "the open one is reused");
-
-    let in_settings =
-        VisualTestContext::from_window(*settings, main).into_mut();
-    in_settings.simulate_keystrokes("escape");
-    in_settings.run_until_parked();
-    let left = main.windows();
-    assert_eq!(left.len(), 1, "Escape closed Settings");
-    assert_ne!(left[0], *settings, "the treemap window is the one left");
-
-    // Closed and reopened: a new window, not the stale handle.
-    let again = main.update(|_, cx| crate::settings_view::open(cx));
-    assert_ne!(*again, *settings);
-    assert_eq!(main.windows().len(), 2);
-    let in_settings = VisualTestContext::from_window(*again, main).into_mut();
-    in_settings.simulate_keystrokes("cmd-w");
-    in_settings.run_until_parked();
-    assert_eq!(main.windows().len(), 1, "⌘ W closed Settings");
+    assert!(settings_shown(&view, cx), "a choice leaves the sheet open");
 }
 
 /// The names of a menu's action items, or only the checked ones.

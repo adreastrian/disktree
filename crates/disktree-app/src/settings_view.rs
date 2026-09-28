@@ -1,39 +1,45 @@
-//! The Settings window: appearance, theme and dark flavour.
+//! The Settings sheet: appearance, theme and dark flavour.
 //!
-//! A second, small, fixed-size window, laid out the way System Settings
-//! lays out a pane: a label column on the left, the control on the right.
-//! There is only ever one: Disktree ▸ Settings… (`⌘ ,`) opens it, or brings
-//! the open one forward. Escape and `⌘ W` close it; closing it leaves the
-//! treemap where it was.
+//! A panel over the treemap in the main window, the way `⌘ ,` opens
+//! Settings in the apps that have no second window to keep. Disktree ▸
+//! Settings… (`⌘ ,`) opens it and closes it again; so do Escape, the
+//! close button and a press on the dimmed backdrop. The panel owns the
+//! keyboard while it is open: Tab walks its controls and nothing reaches
+//! the treemap underneath.
 //!
 //! Every control applies its choice at once through [`settings::choose`],
-//! so the treemap behind the window, the window itself and the View menu
-//! all change together, and the choice is saved for next time.
+//! so the treemap behind the sheet, the sheet itself and the View menu all
+//! change together, and the choice is saved for next time.
 
 use disktree_core::classify::Category;
+use gpui_kit::base::{RadioGroup, ThemeAppearance};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
-    AnyElement, App, AppContext as _, Bounds, Context, Div, FocusHandle,
-    FontWeight, InteractiveElement as _, IntoElement, ParentElement, Render,
-    Styled, Window, WindowHandle, WindowOptions, div, px, relative,
+    App, Context, Div, FocusHandle, FontWeight, InteractiveElement as _,
+    IntoElement, ParentElement, StatefulInteractiveElement as _, Styled,
+    Window, div, relative,
 };
 
-use crate::controls::{ChoiceItem, button_group, card_group};
-use crate::menu;
+use crate::controls::{
+    ButtonVariant, ChoiceItem, IconName, button, card_group, choice_focus,
+    icon, sheet_dialog,
+};
 use crate::palette;
 use crate::settings;
+use crate::state::Disktree;
 use crate::theme::{
     self, ActiveTheme as _, AppearanceChoice, Flavour, Theme, ThemeChoice,
     ThemeId,
 };
-use crate::ui::{BASE_REM, radius, size, space, text};
+use crate::ui::{icon as icon_size, radius, size, space, text};
+use crate::widgets::eyebrow;
 
-/// The key context the window's own bindings (Escape, Tab) live in.
+/// The key context the sheet's own bindings (Tab, Shift-Tab) live in.
 pub const CONTEXT: &str = "DisktreeSettings";
 
 // Tab walks the controls. gpui keeps the tab order but presses nothing on
-// its own, and the treemap window spends Tab on the next sibling, so the
-// walk is bound here, for this window only.
+// its own, and the treemap spends Tab on the next sibling, so the walk is
+// bound here, for the sheet only.
 gpui_kit::actions!(
     disktree,
     [
@@ -44,213 +50,384 @@ gpui_kit::actions!(
     ]
 );
 
-/// The root view of the Settings window.
-pub struct SettingsWindow {
-    /// The window's own focus, taken when nothing else in it has it, so
-    /// Escape and `⌘ W` always have somewhere to land.
-    pub focus: FocusHandle,
-}
+/// The debug selector of the sheet's first control, where focus lands on
+/// opening.
+const FIRST_CONTROL: &str = "settings-appearance";
 
-impl std::fmt::Debug for SettingsWindow {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SettingsWindow").finish_non_exhaustive()
+/// The sheet, drawn over the window while `app.settings_open`.
+pub fn settings_overlay(
+    app: &Disktree,
+    window: &mut Window,
+    cx: &mut Context<'_, Disktree>,
+) -> impl IntoElement {
+    let theme = cx.theme().clone();
+    let choice = theme::choice(cx);
+
+    // Opening puts focus on the sheet's host; the first control is the
+    // place to be, and it exists only once the sheet is being drawn.
+    if app.settings_focus.is_focused(window) {
+        let first = choice_focus(FIRST_CONTROL, window, cx);
+        window.focus(&first, cx);
     }
+
+    let header = div()
+        .flex()
+        .flex_row()
+        .items_center()
+        .justify_between()
+        .flex_shrink_0()
+        .px(space::LG + space::XXS)
+        .pt(space::LG)
+        .pb(space::MD)
+        .child(
+            div()
+                .text_size(text::TITLE)
+                .font_weight(FontWeight::BOLD)
+                .text_color(theme.bright)
+                .child("Settings"),
+        )
+        .child(
+            button("settings-close", "", ButtonVariant::Secondary, cx)
+                .accessibility_label("Close")
+                .debug_selector(|| "settings-close".into())
+                .p(space::XS + space::XXS)
+                .text_color(theme.secondary)
+                .child(icon(IconName::Close).size(icon_size::MD))
+                .on_click(cx.listener(|this, _, window, cx| {
+                    this.close_settings(cx);
+                    this.apply_focus(window, cx);
+                })),
+        );
+
+    let body = div()
+        .id("settings-body")
+        .overflow_y_scroll()
+        .flex_1()
+        .min_h_0()
+        .flex()
+        .flex_col()
+        .gap(space::XL)
+        .px(space::LG + space::XXS)
+        .pb(space::LG + space::XXS)
+        .child(section("Appearance", appearance(choice, window, cx), cx))
+        .child(section("Theme", themes(choice, window, cx), cx))
+        .when(choice.theme.has_flavours(), |body| {
+            body.child(
+                section("Dark flavour", flavours(choice, window, cx), cx)
+                    .child(
+                        div()
+                            .text_size(text::CAPTION)
+                            .text_color(theme.secondary)
+                            .child("Light mode uses Latte."),
+                    ),
+            )
+        });
+
+    let panel = div()
+        .id("disktree-settings")
+        .debug_selector(|| "disktree-settings".into())
+        // A press on the panel is not a press on the backdrop behind it.
+        .occlude()
+        .flex()
+        .flex_col()
+        .w(size::SETTINGS_PANEL)
+        .max_w(relative(1.))
+        // Shorter than the window, so the body scrolls before the panel
+        // runs off the screen at the minimum window size.
+        .max_h(relative(0.92))
+        .border_1()
+        .border_color(theme.border)
+        .rounded(radius::DIALOG)
+        .shadow_lg()
+        .bg(theme.surface)
+        .text_color(theme.foreground)
+        .font_family(theme.font)
+        .text_size(text::BODY)
+        .child(header)
+        .child(body);
+
+    let close = cx.entity().downgrade();
+    let sheet = sheet_dialog(&app.settings_focus, cx)
+        .open(true)
+        // Return is spent by the control that has focus; the sheet itself
+        // has nothing to confirm.
+        .on_ok(|_, _, _| false)
+        .on_cancel(move |_, window, cx| {
+            let _ = close.update(cx, |this, cx| {
+                this.close_settings(cx);
+                this.apply_focus(window, cx);
+            });
+            false
+        })
+        .child(panel);
+
+    let next = app.settings_focus.clone();
+    let previous = app.settings_focus.clone();
+    div()
+        .key_context(CONTEXT)
+        .on_action(move |_: &NextControl, window, cx| {
+            step(&next, true, window, cx);
+        })
+        .on_action(move |_: &PreviousControl, window, cx| {
+            step(&previous, false, window, cx);
+        })
+        .child(sheet)
 }
 
-impl SettingsWindow {
-    pub fn new(cx: &mut Context<'_, Self>) -> Self {
-        Self {
-            focus: cx.focus_handle(),
+/// Move focus to the next (or previous) control inside `within`.
+///
+/// The tab order is the window's: the sheet is drawn last, so the stop
+/// after its last control is the treemap's first, and the one before its
+/// first is the treemap's last. Stepping on until focus is back in the
+/// sheet makes the walk cycle within it.
+fn step(
+    within: &FocusHandle,
+    forward: bool,
+    window: &mut Window,
+    cx: &mut App,
+) {
+    // The window has a handful of stops outside the sheet; well within
+    // this many steps the walk is back inside.
+    const LIMIT: usize = 32;
+    for _ in 0..LIMIT {
+        if forward {
+            window.focus_next(cx);
+        } else {
+            window.focus_prev(cx);
+        }
+        if within.contains_focused(window, cx) {
+            return;
         }
     }
 }
 
-/// The Settings window that is open, if one is, so a second `⌘ ,` brings
-/// it forward instead of opening another.
-#[derive(Debug, Default)]
-struct OpenWindow(Option<WindowHandle<SettingsWindow>>);
-impl gpui_kit::Global for OpenWindow {}
-
-/// Open Settings, or bring the open Settings window to the front.
-pub fn open(cx: &mut App) -> WindowHandle<SettingsWindow> {
-    // A closed window's handle stays in the global; the window list says
-    // whether it is still one of ours.
-    if let Some(handle) = cx.try_global::<OpenWindow>().and_then(|w| w.0)
-        && cx.windows().contains(&handle)
-    {
-        let _ = handle.update(cx, |this, window, cx| {
-            window.focus(&this.focus, cx);
-            window.activate_window();
-        });
-        return handle;
-    }
-    let bounds = Bounds::centered(
-        None,
-        gpui_kit::size(
-            px(size::SETTINGS_WINDOW.0 * BASE_REM),
-            px(size::SETTINGS_WINDOW_HEIGHT.0 * BASE_REM),
-        ),
-        cx,
-    );
-    let handle = cx
-        .open_window(
-            WindowOptions {
-                window_bounds: Some(gpui_kit::WindowBounds::Windowed(bounds)),
-                titlebar: Some(gpui_kit::TitlebarOptions {
-                    title: Some("Settings".into()),
-                    ..Default::default()
-                }),
-                // A settings pane has one size, as the system's has: the
-                // content is three rows and never scrolls.
-                is_resizable: false,
-                is_minimizable: false,
-                ..Default::default()
-            },
-            |_, cx| cx.new(SettingsWindow::new),
-        )
-        .expect("open the settings window");
-    let _ = handle.update(cx, |this, window, cx| {
-        window.focus(&this.focus, cx);
-        window.activate_window();
-    });
-    cx.set_global(OpenWindow(Some(handle)));
-    handle
-}
-
-impl Render for SettingsWindow {
-    fn render(
-        &mut self,
-        window: &mut Window,
-        cx: &mut Context<'_, Self>,
-    ) -> impl IntoElement {
-        let theme = cx.theme().clone();
-        let choice = theme::choice(cx);
-
-        let appearance = button_group(
-            "settings-appearance",
-            AppearanceChoice::ALL
-                .into_iter()
-                .map(|choice| ChoiceItem::new(choice.key(), choice.name()))
-                .collect(),
-            AppearanceChoice::ALL
-                .iter()
-                .position(|&it| it == choice.appearance),
-            move |index, _, cx| {
-                let appearance = AppearanceChoice::ALL[index];
-                settings::choose(
-                    ThemeChoice {
-                        appearance,
-                        ..choice
-                    },
-                    cx,
-                );
-            },
-            window,
-            cx,
-        )
-        .w(size::RANKING_CHOICE);
-
-        // Each card is drawn in its own theme, in the appearance the window
-        // is showing, so the cards are a preview and not a legend.
-        let shown = choice.appearance.resolve(window.appearance());
-        let cards = ThemeId::ALL
-            .into_iter()
-            .map(|id| {
-                let preview = Theme::resolve(
-                    ThemeChoice {
-                        theme: id,
-                        ..choice
-                    },
-                    shown,
-                );
-                thumbnail(&preview).into_any_element()
-            })
-            .collect::<Vec<AnyElement>>();
-        let themes = card_group(
-            "settings-theme",
-            ThemeId::ALL
-                .into_iter()
-                .map(|id| ChoiceItem::new(id.key(), id.name()))
-                .collect(),
-            cards,
-            ThemeId::ALL.iter().position(|&it| it == choice.theme),
-            move |index, _, cx| {
-                let theme = ThemeId::ALL[index];
-                settings::choose(ThemeChoice { theme, ..choice }, cx);
-            },
-            window,
-            cx,
-        );
-
-        let flavour = choice.theme.has_flavours().then(|| {
-            button_group(
-                "settings-flavour",
-                Flavour::ALL
-                    .into_iter()
-                    .map(|flavour| {
-                        ChoiceItem::new(flavour.key(), flavour.name())
-                    })
-                    .collect(),
-                Flavour::ALL.iter().position(|&it| it == choice.flavour),
-                move |index, _, cx| {
-                    let flavour = Flavour::ALL[index];
-                    settings::choose(ThemeChoice { flavour, ..choice }, cx);
-                },
-                window,
-                cx,
-            )
-            .w(size::RANKING_CHOICE)
-        });
-
-        div()
-            .id("disktree-settings")
-            .debug_selector(|| "disktree-settings".into())
-            .track_focus(&self.focus)
-            .key_context(CONTEXT)
-            .on_action(|_: &menu::CloseWindow, window, _| {
-                window.remove_window();
-            })
-            .on_action(|_: &NextControl, window, cx| window.focus_next(cx))
-            .on_action(|_: &PreviousControl, window, cx| {
-                window.focus_prev(cx);
-            })
-            .flex()
-            .flex_col()
-            .size_full()
-            .p(space::LG + space::XXS)
-            .gap(space::XL)
-            .bg(theme.background)
-            .text_color(theme.foreground)
-            .font_family(theme.font.clone())
-            .text_size(text::BODY)
-            .child(row("Appearance", appearance, &theme))
-            .child(row("Theme", themes, &theme))
-            .when_some(flavour, |root, flavour| {
-                root.child(row("Dark flavour", flavour, &theme))
-            })
-    }
-}
-
-/// One settings row: the label in the left column, the control beside it.
-fn row(label: &'static str, control: impl IntoElement, theme: &Theme) -> Div {
+/// An eyebrow over a control.
+fn section(label: &'static str, control: impl IntoElement, cx: &App) -> Div {
     div()
         .flex()
-        .flex_row()
-        .items_start()
-        .gap(space::LG)
+        .flex_col()
+        .gap(space::SM)
+        .child(eyebrow(label, cx))
+        .child(control)
+}
+
+/// System, Light and Dark, each a small picture of a window in that
+/// appearance: System is half and half, as System Settings draws it.
+fn appearance(
+    choice: ThemeChoice,
+    window: &mut Window,
+    cx: &mut App,
+) -> RadioGroup {
+    let light = Theme::resolve(choice, ThemeAppearance::Light);
+    let dark = Theme::resolve(choice, ThemeAppearance::Dark);
+    let cards = AppearanceChoice::ALL
+        .into_iter()
+        .map(|it| {
+            (
+                ChoiceItem::new(it.key(), it.name()),
+                appearance_swatch(it, &light, &dark).into_any_element(),
+            )
+        })
+        .collect();
+    card_group(
+        "settings-appearance",
+        cards,
+        size::SWATCH_CARD,
+        AppearanceChoice::ALL
+            .iter()
+            .position(|&it| it == choice.appearance),
+        move |index, _, cx| {
+            let appearance = AppearanceChoice::ALL[index];
+            settings::choose(
+                ThemeChoice {
+                    appearance,
+                    ..choice
+                },
+                cx,
+            );
+        },
+        window,
+        cx,
+    )
+}
+
+/// A card for every theme, each drawn in its own colours in the appearance
+/// the window is showing, so the cards are a preview and not a legend.
+fn themes(
+    choice: ThemeChoice,
+    window: &mut Window,
+    cx: &mut App,
+) -> RadioGroup {
+    let shown = choice.appearance.resolve(window.appearance());
+    let cards = ThemeId::ALL
+        .into_iter()
+        .map(|id| {
+            let preview = Theme::resolve(
+                ThemeChoice {
+                    theme: id,
+                    ..choice
+                },
+                shown,
+            );
+            (
+                ChoiceItem::new(id.key(), id.name()),
+                thumbnail(&preview).into_any_element(),
+            )
+        })
+        .collect();
+    card_group(
+        "settings-theme",
+        cards,
+        size::THEME_CARD,
+        ThemeId::ALL.iter().position(|&it| it == choice.theme),
+        move |index, _, cx| {
+            let theme = ThemeId::ALL[index];
+            settings::choose(ThemeChoice { theme, ..choice }, cx);
+        },
+        window,
+        cx,
+    )
+}
+
+/// The three dark flavours, each a swatch of its own dark palette: the
+/// flavour is a dark-mode choice, so the swatch is dark whatever the
+/// window shows.
+fn flavours(
+    choice: ThemeChoice,
+    window: &mut Window,
+    cx: &mut App,
+) -> RadioGroup {
+    let cards = Flavour::ALL
+        .into_iter()
+        .map(|flavour| {
+            let palette = Theme::resolve(
+                ThemeChoice { flavour, ..choice },
+                ThemeAppearance::Dark,
+            );
+            (
+                ChoiceItem::new(flavour.key(), flavour.name()),
+                flavour_swatch(&palette).into_any_element(),
+            )
+        })
+        .collect();
+    card_group(
+        "settings-flavour",
+        cards,
+        size::SWATCH_CARD,
+        Flavour::ALL.iter().position(|&it| it == choice.flavour),
+        move |index, _, cx| {
+            let flavour = Flavour::ALL[index];
+            settings::choose(ThemeChoice { flavour, ..choice }, cx);
+        },
+        window,
+        cx,
+    )
+}
+
+/// The categories a swatch shows, in the order they tend to appear on a
+/// home directory: enough to tell the palettes apart, not the whole legend.
+const SWATCH_CATEGORIES: [Category; 6] = [
+    Category::Code,
+    Category::Media,
+    Category::Documents,
+    Category::Toolchain,
+    Category::Cache,
+    Category::Git,
+];
+
+/// The frame every swatch sits in: a small rounded window.
+fn swatch_frame(theme: &Theme) -> Div {
+    div()
+        .flex()
+        .w(size::SWATCH_THUMB)
+        .h(size::SWATCH_THUMB * 0.64)
+        .rounded(radius::CONTROL)
+        .overflow_hidden()
+        .border_1()
+        .border_color(theme.border)
+}
+
+/// A flavour: its dark background with a row of its category accents.
+fn flavour_swatch(palette: &Theme) -> Div {
+    swatch_frame(palette)
+        .items_center()
+        .justify_center()
+        .gap(space::XS)
+        .bg(palette.background)
+        .children(SWATCH_CATEGORIES.into_iter().map(|category| {
+            div()
+                .size(space::SM)
+                .rounded_full()
+                .bg(palette::category_accent(palette, category))
+        }))
+}
+
+/// An appearance: a window in that palette, or one of each side by side
+/// for System.
+fn appearance_swatch(
+    appearance: AppearanceChoice,
+    light: &Theme,
+    dark: &Theme,
+) -> Div {
+    let frame = swatch_frame(light).flex_row();
+    match appearance {
+        AppearanceChoice::System => {
+            frame.child(window_half(light)).child(window_half(dark))
+        }
+        AppearanceChoice::Light => frame.child(window_half(light)),
+        AppearanceChoice::Dark => frame.child(window_half(dark)),
+    }
+}
+
+/// Half (or all) of a window in `theme`: the title band with the accent,
+/// and a well with two tiles in it.
+fn window_half(theme: &Theme) -> Div {
+    div()
+        .flex_1()
+        .h_full()
+        .flex()
+        .flex_col()
+        .bg(theme.background)
         .child(
             div()
-                .w(size::SETTINGS_LABEL)
+                .w_full()
+                .h(relative(0.28))
                 .flex_shrink_0()
-                // The control's first line, not the row's top, is what the
-                // label should sit on.
-                .pt(space::XS + space::XXS)
-                .text_right()
-                .font_weight(FontWeight::SEMIBOLD)
-                .text_color(theme.secondary)
-                .child(label),
+                .flex()
+                .items_center()
+                .px(space::XS)
+                .child(
+                    div()
+                        .w(space::SM)
+                        .h(space::XS)
+                        .rounded(radius::KEYCAP)
+                        .bg(theme.accent),
+                ),
         )
-        .child(div().flex_1().min_w_0().child(control))
+        .child(
+            div()
+                .flex_1()
+                .w_full()
+                .flex()
+                .flex_row()
+                .gap(space::XXS)
+                .p(space::XXS)
+                .bg(theme.inset)
+                .child(
+                    div()
+                        .flex_1()
+                        .h_full()
+                        .rounded(radius::KEYCAP)
+                        .bg(palette::category_fill(theme, Category::Code, 0)),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .h_full()
+                        .rounded(radius::KEYCAP)
+                        .bg(palette::category_fill(theme, Category::Media, 0)),
+                ),
+        )
 }
 
 /// A mini treemap in `theme`'s colours: a title band, a few top-level

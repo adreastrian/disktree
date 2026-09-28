@@ -192,10 +192,13 @@ dark flavour, **Frappé**, **Macchiato** or **Mocha** (light is always
 Latte). The appearance follows the system by default, or can be held at
 Light or Dark.
 
-**Disktree ▸ Settings…** (`⌘ ,`) opens a small window with the appearance,
-a card for every theme drawn in its own colours, and the flavour row when
-the theme has one; a click applies at once, and Escape or `⌘ W` closes it.
-The same choices are in **View ▸ Theme**, with the current one checked.
+**Disktree ▸ Settings…** (`⌘ ,`) opens a sheet over the treemap with the
+appearance (System, Light or Dark, each drawn as a small window), a card
+for every theme drawn in its own colours, and a swatch of each dark
+flavour when the theme has them; a click applies at once. Escape, `⌘ ,`
+again, the close button or a click outside the sheet closes it, and the
+treemap keeps its keys until then. The same choices are in
+**View ▸ Theme**, with the current one checked.
 The choice is saved to
 `~/Library/Application Support/Disktree/settings`, a plain
 `key = value` file, and read again at launch.
@@ -372,7 +375,7 @@ that and refuses first unless the tag exists and points at `HEAD`.
 | `crates/disktree-app/src/theme.rs` | the theme choice, and following the system appearance |
 | `crates/disktree-app/src/themes.rs` | the palettes of every theme; generated from `design/palettes/`, not edited |
 | `crates/disktree-app/src/settings.rs` | the saved choice in `~/Library/Application Support/Disktree/settings` |
-| `crates/disktree-app/src/settings_view.rs` | the Settings window |
+| `crates/disktree-app/src/settings_view.rs` | the Settings sheet |
 | `crates/disktree-app/src/controls.rs` | buttons, dialogs, tooltips and key caps |
 | `crates/disktree-app/src/ui.rs` | the spacing, type and size scale, in `rem` |
 | `crates/disktree-app/src/tests.rs` | end-to-end tests through a real window |
