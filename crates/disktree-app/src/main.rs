@@ -154,11 +154,9 @@ fn main() -> Result<()> {
         });
         // One window is the whole app: there is no document to keep open
         // behind it, so closing it (⌘W, the red button) quits rather than
-        // leaving a bare menu bar, even while Settings is open. Closing
-        // Settings on its own leaves the treemap where it was.
-        let main_window = window.window_id();
-        cx.on_window_closed(move |cx, closed| {
-            if closed == main_window || cx.windows().is_empty() {
+        // leaving a bare menu bar.
+        cx.on_window_closed(|cx, _| {
+            if cx.windows().is_empty() {
                 cx.quit();
             }
         })

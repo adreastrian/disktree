@@ -367,6 +367,12 @@ pub struct Disktree {
     /// Focus to move on the next occasion a window is in hand. Key handling
     /// has no window, and opening or closing the dialog must move focus.
     pub focus_request: Option<FocusTarget>,
+    /// The Settings sheet is open over the treemap. It owns the keyboard
+    /// while it is: nothing underneath answers a key.
+    pub settings_open: bool,
+    /// Focus owner for the Settings sheet: its host takes it on opening,
+    /// then hands it to the first control.
+    pub settings_focus: FocusHandle,
     /// The window's `rem` in pixels, read each frame. The mosaic is laid out
     /// in pixels, so its header band and label thresholds are scaled by this
     /// to follow interface zoom like the rest of the interface.
@@ -480,6 +486,8 @@ impl Disktree {
             confirm_open: false,
             confirm_focus: cx.focus_handle(),
             focus_request: None,
+            settings_open: false,
+            settings_focus: cx.focus_handle(),
             rem: crate::ui::BASE_REM,
             run: None,
             run_epoch: 0,
@@ -1833,6 +1841,9 @@ impl Disktree {
         match self.focus_request.take() {
             Some(FocusTarget::Root) => window.focus(&self.focus, cx),
             Some(FocusTarget::Dialog) => window.focus(&self.confirm_focus, cx),
+            Some(FocusTarget::Settings) => {
+                window.focus(&self.settings_focus, cx);
+            }
             None => {}
         }
     }
@@ -1943,6 +1954,27 @@ impl Disktree {
     /// `?` and the Help menu.
     pub fn toggle_help(&mut self, cx: &mut Context<'_, Self>) {
         self.show_help = !self.show_help;
+        cx.notify();
+    }
+
+    /// `⌘ ,` and Disktree ▸ Settings…: open the sheet, or close the open
+    /// one, as the same chord does in the apps that keep Settings in the
+    /// main window.
+    pub fn toggle_settings(&mut self, cx: &mut Context<'_, Self>) {
+        if self.settings_open {
+            self.close_settings(cx);
+        } else {
+            self.settings_open = true;
+            self.focus_request = Some(FocusTarget::Settings);
+            cx.notify();
+        }
+    }
+
+    /// The sheet's close button, Escape, or a press on the backdrop. The
+    /// keyboard goes back to the treemap.
+    pub fn close_settings(&mut self, cx: &mut Context<'_, Self>) {
+        self.settings_open = false;
+        self.focus_request = Some(FocusTarget::Root);
         cx.notify();
     }
 
@@ -2184,6 +2216,11 @@ impl Disktree {
         // The alert dialog owns Enter and Escape while it is open; a key that
         // bubbles up to here must not also act on the screen behind it.
         if self.confirm_open {
+            return;
+        }
+        // So does the Settings sheet: its controls answer their own keys,
+        // and the rest must not mark or open a tile behind it.
+        if self.settings_open {
             return;
         }
 
@@ -2690,6 +2727,8 @@ pub enum FocusTarget {
     Root,
     /// The permanent-deletion alert dialog.
     Dialog,
+    /// The Settings sheet.
+    Settings,
 }
 
 impl Render for Disktree {

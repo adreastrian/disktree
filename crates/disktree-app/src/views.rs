@@ -99,6 +99,10 @@ pub fn root(
         .on_action(cx.listener(|this, _: &menu::ShowHelp, _, cx| {
             this.toggle_help(cx);
         }))
+        .on_action(cx.listener(|this, _: &menu::OpenSettings, window, cx| {
+            this.toggle_settings(cx);
+            this.apply_focus(window, cx);
+        }))
         .on_action(cx.listener(|_, _: &menu::OpenFolder, window, cx| {
             Disktree::prompt_for_folder(window, cx);
         }))
@@ -122,6 +126,10 @@ pub fn root(
     }
     if app.confirm_open {
         root = root.child(delete_dialog(app, cx));
+    }
+    if app.settings_open {
+        root =
+            root.child(crate::settings_view::settings_overlay(app, window, cx));
     }
     root
 }
