@@ -14,6 +14,7 @@ mod state;
 #[cfg(test)]
 mod tests;
 mod theme;
+mod themes;
 mod treemap_view;
 mod ui;
 mod views;

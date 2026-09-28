@@ -496,20 +496,38 @@ fn the_treemap_zooms_with_the_wheel_and_resets(cx: &mut TestAppContext) {
     assert!((read(&view, cx, |app| app.view.scale) - 1.0).abs() < f32::EPSILON);
 }
 
-/// Both system appearances must draw: the palette is derived from the
-/// theme, so the light theme is a real second configuration.
+/// Every theme in every appearance must draw, the Catppuccin ones in every
+/// flavour: each is a separate table, and each shape paints its tiles its
+/// own way, so a strip or a corner that panics fails here.
 #[gpui_kit::test]
 fn both_appearances_draw(cx: &mut TestAppContext) {
+    use crate::theme::{AppearanceChoice, Flavour, ThemeChoice, ThemeId};
+    use gpui_kit::base::ThemeAppearance;
+
     cx.update(init);
     let temp = fixture();
     let (view, cx) = view_over(temp.path(), cx);
-    for theme in [Theme::dark(), Theme::light()] {
-        view.update(cx, |_, cx| {
-            theme.clone().apply(cx);
-            cx.notify();
-        });
-        draw(cx);
-        assert!(cx.debug_bounds("disktree-root").is_some());
+    for theme in ThemeId::ALL {
+        for flavour in Flavour::ALL {
+            for appearance in [ThemeAppearance::Dark, ThemeAppearance::Light] {
+                let choice = ThemeChoice {
+                    theme,
+                    flavour,
+                    appearance: AppearanceChoice::System,
+                };
+                let resolved = Theme::resolve(choice, appearance);
+                let name = resolved.name.clone();
+                view.update(cx, |_, cx| {
+                    resolved.apply(cx);
+                    cx.notify();
+                });
+                draw(cx);
+                assert!(
+                    cx.debug_bounds("disktree-root").is_some(),
+                    "{name} in {appearance:?}"
+                );
+            }
+        }
     }
 }
 

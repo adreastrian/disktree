@@ -633,7 +633,7 @@ pub fn separator(cx: &App) -> Div {
         .w_full()
         .h(rems(0.0625))
         .flex_shrink_0()
-        .bg(cx.theme().divider())
+        .bg(cx.theme().divider)
 }
 
 /// A key the reader can press, drawn as a small cap.
